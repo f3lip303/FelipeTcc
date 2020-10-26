@@ -2,6 +2,15 @@ package tccfelipe.felipetcc;
 
 import java.util.Random;
 
+import org.bson.Document;
+
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+
 import model.Visita;
 import optmizations.HeuristicaConstrucaoInsercaoMaisDistante;
 import optmizations.Opt2;
@@ -16,7 +25,21 @@ import utils.Utilidades;
  */
 public class App {
 	public static void main(String[] args) throws Exception {
-		System.out.println("Hello World!");
+		
+		MongoClient mongoClient = new MongoClient("localhost",27017);
+		MongoDatabase database = mongoClient.getDatabase("TCC");
+		MongoCollection<Document> colection = database.getCollection("Visitas");
+		MongoCursor cursor = colection.find().iterator();
+		
+		try {
+			 while(cursor.hasNext()) {
+	                System.out.println(cursor.next().toString());
+			 }
+		} finally {
+			cursor.close();
+		}
+		
+		/*System.out.println("Hello World!");
 		Grafo matriz = new Grafo(20);
 		//matriz.printListaClientes();
 

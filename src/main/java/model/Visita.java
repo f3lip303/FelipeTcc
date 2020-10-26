@@ -1,12 +1,18 @@
 package model;
 
-
 public class Visita {
 
 	private int codigoVisita;
 	private int x;
 	private int y;
-
+	private int codigoCiclo;
+	private int codigoSecao;
+	private int codigoDistrito;
+	private int ordemNaRota;
+	private double tempoInicioAtendimento;
+	private double tempoFimAtendimento;
+	private double tempoDeslocamentoProximaVisita;
+	
 	/* Construtor padrão */
 	public Visita() {
 		super();
@@ -43,9 +49,66 @@ public class Visita {
 		this.y = y;
 	}
 
+	public int getCodigoCiclo() {
+		return codigoCiclo;
+	}
+
+	public void setCodigoCiclo(int codigoCiclo) {
+		this.codigoCiclo = codigoCiclo;
+	}
+
+	public int getCodigoSecao() {
+		return codigoSecao;
+	}
+
+	public void setCodigoSecao(int codigoSecao) {
+		this.codigoSecao = codigoSecao;
+	}
+
+	public int getCodigoDistrito() {
+		return codigoDistrito;
+	}
+
+	public void setCodigoDistrito(int codigoDistrito) {
+		this.codigoDistrito = codigoDistrito;
+	}
+
+	public int getOrdemNaRota() {
+		return ordemNaRota;
+	}
+
+	public void setOrdemNaRota(int ordemNaRota) {
+		this.ordemNaRota = ordemNaRota;
+	}
+
+	public double getTempoInicioAtendimento() {
+		return tempoInicioAtendimento;
+	}
+
+	public void setTempoInicioAtendimento(double tempoInicioAtendimento) {
+		this.tempoInicioAtendimento = tempoInicioAtendimento;
+	}
+
+	public double getTempoFimAtendimento() {
+		return tempoFimAtendimento;
+	}
+
+	public void setTempoFimAtendimento(double tempoFimAtendimento) {
+		this.tempoFimAtendimento = tempoFimAtendimento;
+	}
+
+
+	public double getTempoDeslocamentoProximaVisita() {
+		return tempoDeslocamentoProximaVisita;
+	}
+
+	public void setTempoDeslocamentoProximaVisita(double tempoDeslocamentoProximaVisita) {
+		this.tempoDeslocamentoProximaVisita = tempoDeslocamentoProximaVisita;
+	}
+
 	@Override
 	public String toString() {
-				return  "Codigo Visita = "+ getCodigoVisita() + "X = " + getX() + "Y = " + getY();
+		return "Codigo Visita = " + getCodigoVisita() + "X = " + getX() + "Y = " + getY();
 	}
 	/*
 	 * @Override public String toString(){ return (this.isCD() ? "CD:\n" :
@@ -56,8 +119,8 @@ public class Visita {
 	 * "Exit hour: "+this.getExitHour()+"\n"+
 	 * "Current kilometer: "+this.getCurrentKilometer(); }
 	 */
-	
-	public int compareTo(Visita arg0) {		
+
+	public int compareTo(Visita arg0) {
 		int id = arg0.codigoVisita;
 		if (this.getCodigoVisita() < id)
 			return -1;
