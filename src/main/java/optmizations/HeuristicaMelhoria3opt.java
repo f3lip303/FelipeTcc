@@ -120,7 +120,7 @@ public class HeuristicaMelhoria3opt implements HeuristicaMelhoria {
 		route4.add(nodes.get(nodes.size() - 1));
 		custoTemp = Utilidades.calculaCustoRota(w, route4);
 		if (custoTemp < melhorCusto) {
-			nodes = new ArrayList<>(route4);
+			nodes = new ArrayList<Integer>(route4);
 			melhorCusto = custoTemp;
 			return 4;
 		}
@@ -143,7 +143,7 @@ public class HeuristicaMelhoria3opt implements HeuristicaMelhoria {
 		route5.add(nodes.get(nodes.size() - 1));
 		custoTemp = Utilidades.calculaCustoRota(w, route5);
 		if (custoTemp < melhorCusto) {
-			nodes = new ArrayList<>(route5);
+			nodes = new ArrayList<Integer>(route5);
 			melhorCusto = custoTemp;
 			return 5;
 		}
@@ -166,7 +166,7 @@ public class HeuristicaMelhoria3opt implements HeuristicaMelhoria {
 		route6.add(nodes.get(nodes.size() - 1));
 		custoTemp = Utilidades.calculaCustoRota(w, route6);
 		if (custoTemp < melhorCusto) {
-			nodes = new ArrayList<>(route6);
+			nodes = new ArrayList<Integer>(route6);
 			melhorCusto = custoTemp;
 			return 6;
 		}
@@ -189,7 +189,7 @@ public class HeuristicaMelhoria3opt implements HeuristicaMelhoria {
 		route7.add(nodes.get(nodes.size() - 1));
 		custoTemp = Utilidades.calculaCustoRota(w, route7);
 		if (custoTemp < melhorCusto) {
-			nodes = new ArrayList<>(route7);
+			nodes = new ArrayList<Integer>(route7);
 			melhorCusto = custoTemp;
 			return 7;
 		}

@@ -1,5 +1,7 @@
 package model;
 
+import java.util.List;
+
 public class Rota {
 
 	private int codigoSimulacao;
@@ -10,6 +12,10 @@ public class Rota {
 	private double tempoCiclo;
 	private int totalVisitasPlan;
 	private int totalVisitasExec;
+	private List<CustomerAdaptaded> customers;
+	private int totalCustomers;
+	private CostMatrix costMatrix;
+	private CustomerAdaptaded prev;
 
 	public int getCodigoSimulacao() {
 		return codigoSimulacao;
@@ -74,4 +80,29 @@ public class Rota {
 	public void setTotalVisitasExec(int totalVisitasExec) {
 		this.totalVisitasExec = totalVisitasExec;
 	}
+
+	public List<CustomerAdaptaded> getCustomers() {
+		return customers;
+	}
+
+	public void setCustomers(List<CustomerAdaptaded> customers) {
+		this.customers = customers;
+	}
+
+	public int getTotalCustomers() {
+		return totalCustomers;
+	}
+
+	public void setTotalCustomers(int totalCustomers) {
+		this.totalCustomers = totalCustomers;
+	}
+	
+	public double getCost() {
+		return costMatrix.getCostAmong(prev, getCustomersToArray(), prev);
+	}
+	
+	public CustomerAdaptaded[] getCustomersToArray() {		
+		return this.customers.toArray(new CustomerAdaptaded[this.customers.size()]);
+	}
+	
 }

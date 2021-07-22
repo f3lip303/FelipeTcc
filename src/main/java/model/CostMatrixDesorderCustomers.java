@@ -3,42 +3,42 @@ package model;
 import utils.DistanceCalculator;
 import utils.MatrizDistancia;
 
-public class CostMatrixDesorderCustomers extends MatrizDistancia {
-	public CostMatrixDesorderCustomers(Visita[] customers) {
+public class CostMatrixDesorderCustomers extends CostMatrix {
+	public CostMatrixDesorderCustomers(CustomerAdaptaded[] customers) {
 		super(customers);
 	}
 
-	protected int getCustomerIndex(Visita customer) {
+	protected int getCustomerIndex(CustomerAdaptaded customerAdaptaded) {
 		for (int i = customers.length - 1; i >= 0; i--) {
-			if (customers[i].compareTo(customer) == 0)
+			if (customers[i].compareTo(customerAdaptaded) == 0)
 				return i;
 		}
-		System.out.println("Customer " + customer.getCodigoVisita() + " not found");
+		System.out.println("Customer " + customerAdaptaded.getId() + " not found");
 		return -1;
 	}
 
 	@Override
-	public void addCost(Visita a, Visita b, Double distance) {
+	public void addCost(CustomerAdaptaded a, CustomerAdaptaded b, Double distance) {
 		int ia = getCustomerIndex(a), ib = getCustomerIndex(b);
-		matrizDistancia[ia][ib] = distance;
-		matrizDistancia[ib][ia] = distance;
+		costs[ia][ib] = distance;
+		costs[ib][ia] = distance;
 		size++;
 	}
 
 	@Override
-	public void addPoints(Visita a, Visita b) {
+	public void addPoints(CustomerAdaptaded a, CustomerAdaptaded b) {
 		int ia = getCustomerIndex(a), ib = getCustomerIndex(b);
 		double distance = DistanceCalculator.distance(a, b);
-		matrizDistancia[ia][ib] = distance;
-		matrizDistancia[ib][ia] = distance;
+		costs[ia][ib] = distance;
+		costs[ib][ia] = distance;
 		size++;
 	}
 
 	@Override
-	public Double getMatrizDistancia(Visita a, Visita b) {
+	public Double getCost(CustomerAdaptaded a, CustomerAdaptaded b) {
 		if (a == b)
 			return 0d;
-		return matrizDistancia[getCustomerIndex(a)][getCustomerIndex(b)];
+		return costs[getCustomerIndex(a)][getCustomerIndex(b)];
 	}
 
 }

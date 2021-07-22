@@ -21,8 +21,8 @@ public class VeiculoAuxiliar extends Veiculo {
 		// 1000));
 		Object[] args = getArguments(); // leitura de parametros
 		tipoSimulacao = args[0].toString();
-		faixaV = (int) args[1];
-		faixaH = (int) args[2];
+		faixaV = Integer.valueOf(args[1].toString());
+		faixaH = Integer.valueOf(args[2].toString());
 
 		// System.out.println("AGENT - with params
 		// ("+Integer.toString(faixaV)+Integer.toString(faixaH)+") - "+
@@ -57,6 +57,8 @@ public class VeiculoAuxiliar extends Veiculo {
 		addBehaviour(new AguardarAutorizacao());
 		addBehaviour(new ParticiparLeilaoTarefa(this, mTemplateCfp));
 		addBehaviour(new ReceberAlertaFimCiclo());
+		//addBehaviour(new verificarFim());
+
 
 	}
 
@@ -254,7 +256,7 @@ public class VeiculoAuxiliar extends Veiculo {
 	 */
 	protected class ComunicaTransportador extends OneShotBehaviour {
 		public void action() {
-			System.out.println("Agent " + myAgent.getName() + " comunica transportador!!!");
+			System.out.println("Agent " + myAgent.getName() + " comunica transportador Que terminei a rota!!!");
 			// Comunicar ao transportador que a rota foi realizada
 			ACLMessage msgTermino = new ACLMessage(ACLMessage.INFORM);
 			msgTermino.setLanguage("ROTAS");

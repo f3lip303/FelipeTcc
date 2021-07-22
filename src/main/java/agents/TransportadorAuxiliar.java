@@ -24,14 +24,16 @@ public class TransportadorAuxiliar extends Transportador{
 	protected void setup() {
 		Object[] args = getArguments(); // leitura de parametros
 		tipoSimulacao = args[0].toString();
-		qtdRodadas = (int) args[1];
-		nrVeiculosAux = (int) args[2];
+		qtdRodadas = Integer.valueOf(args[1].toString()) ;
+		nrVeiculosAux = Integer.valueOf(args[2].toString());
 		matrizRotasAuxiliaresConcluidas = new int[nrVeiculosAux];
 
 		// matrizRotasConcluidas = new int[nrVeiculosAux];
 		// Register on topics
 		TopicManagementHelper topicHelper;
 		try {
+			System.out.println("TRANSPORTADOR AUXILIAR TESTANDO !!! 123");
+			System.out.println(getHelper(TopicManagementHelper.SERVICE_NAME).toString());
 			topicHelper = (TopicManagementHelper) getHelper(TopicManagementHelper.SERVICE_NAME);
 			AID jadeTopic = topicHelper.createTopic("souTransportadorAuxiliar");
 			topicHelper.register(jadeTopic);
@@ -44,6 +46,9 @@ public class TransportadorAuxiliar extends Transportador{
 			net = new NetworkRandom(tipoSimulacao);
 			centros = net.calculaTodosCentros();
 		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

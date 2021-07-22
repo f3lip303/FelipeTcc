@@ -27,27 +27,26 @@ public class TimeCostTypeAccess implements ICostTypeAccess{
 	}
 
 
-	public void addCost(Visita a, Visita b, Double cost) {
+	public void addCost(CustomerAdaptaded a, CustomerAdaptaded b, Double cost) {
 		this.getDistanceTimeCostMatrixDesorderCustomers().addTimeCost(a, b, cost);
 		
 	}
 
 
-	public Double getCost(Visita a, Visita b) {
+	public Double getCost(CustomerAdaptaded a, CustomerAdaptaded b) {
 		return this.getDistanceTimeCostMatrixDesorderCustomers().getTimeCost(a, b);
 	}
 
 
-	public double getCostAmong(Visita start, Visita[] customers, Visita end) {
+	public double getCostAmong(CustomerAdaptaded start, CustomerAdaptaded[] customers, CustomerAdaptaded end) {
 		// TODO Auto-generated method stub
 		return this.getDistanceTimeCostMatrixDesorderCustomers().getTimeCostAmong(start, customers, end);
 	}
 
 
-	public Double getCostAmong(Visita... customers) {
+	public Double getCostAmong(CustomerAdaptaded... customers) {
 		// TODO Auto-generated method stub
 		return this.getDistanceTimeCostMatrixDesorderCustomers().getTimeCostAmong(customers);
 	}
-	
 
 }

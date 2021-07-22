@@ -74,6 +74,12 @@ public class SyncAgent extends Agent {
 				}
 
 				// Atualizar lista
+				System.out.println("PRINT DO MSG");
+				System.out.println(msg.toString());
+				System.out.println(msg.getContent());
+				System.out.println(msg.getSender().getLocalName());
+
+
 				listaEventos.put(msg.getSender().getLocalName(), Double.valueOf(msg.getContent()));
 				// Ordenar lista
 				listaEventos = Utilidades.sortHashMapByValues2(listaEventos);

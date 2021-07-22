@@ -23,16 +23,16 @@ public class RouteRandomCentroMassa extends RouteRandomDinamico {
 		super(net, fxV, fxH, pontosX, pontosY);
 
 		// Preparação para criação de pontos
-		queryInsercao = "INSERT INTO visitas(cods, codc, zonai, zonaj, ptx, pty)" + "VALUES (?, ?, ?, ?, ?, ?);";
+		//queryInsercao = "INSERT INTO visitas(cods, codc, zonai, zonaj, ptx, pty)" + "VALUES (?, ?, ?, ?, ?, ?);";
 
 		// Preparação para retirada do roteiro
 		// queryRetirada = "UPDATE visitas SET tpremovido=? WHERE cods=? and codc=? and
 		// zonai=? and zonaj=? and ptx=? and pty=?";
 		// Preparação para retirada do roteiro
-		queryRetirada = "delete from visitas " + "WHERE cods=? and codc=? and zonai=? and zonaj=? and ptx=? and pty=?";
+		//queryRetirada = "delete from visitas " + "WHERE cods=? and codc=? and zonai=? and zonaj=? and ptx=? and pty=?";
 
-		queryEventos = "INSERT INTO eventos(cods, codc, zonai, zonaj, ptx, pty, instante, evento) "
-				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+		//queryEventos = "INSERT INTO eventos(cods, codc, zonai, zonaj, ptx, pty, instante, evento) "
+		//		+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
 
 	}
 

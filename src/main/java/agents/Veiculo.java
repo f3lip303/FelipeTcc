@@ -6,6 +6,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
 
+import agents.Veiculo.EstadosVeiculos;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -143,9 +144,12 @@ public class Veiculo extends Agent {
 			// System.out.println("Negociation finished. "+inform.getContent());
 
 			try {
-				//TODO Arrumar
+				// TODO Arrumar
 				r.removerDaRota(ptX);
 			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -153,13 +157,12 @@ public class Veiculo extends Agent {
 			contLeiloesAbertos--;
 			System.out.println("Leiloes abertos " + myAgent.getName() + ": " + Integer.toString(contLeiloesAbertos));
 			if (contLeiloesAbertos == 0) {
-				//TODO Arrumar
-				/*if (r.getVisitaAtual() < r.getRota().size() - 2) {
-					estAtual = estAnterior;
-				} else {
-					estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_VOLTA;
-					participoDeLeilao = false;
-				}*/
+				// TODO Arrumar
+				/*
+				 * if (r.getVisitaAtual() < r.getRota().size() - 2) { estAtual = estAnterior; }
+				 * else { estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_VOLTA; participoDeLeilao
+				 * = false; }
+				 */
 
 				// estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_ENTRE;
 				addBehaviour(new PedirAutorizacao());
@@ -181,81 +184,94 @@ public class Veiculo extends Agent {
 			}
 		}
 	}
-	
-	protected class ParticiparLeilaoTarefa extends ContractNetResponder{
+
+	protected class ParticiparLeilaoTarefa extends ContractNetResponder {
 
 		public ParticiparLeilaoTarefa(Agent a, MessageTemplate mt) {
 			super(a, mt);
 
 		}
-		
+
 		@Override
 		protected ACLMessage handleCfp(ACLMessage cfp) {
 			ACLMessage reply = cfp.createReply();
 			double[] point = Utilidades.fromString(cfp.getContent());
 			// Verificar se há tempo disponível para a rota estimada
 
-
-			if ((participoDeLeilao) && (r.getTempoGasto() + r.estimaTempoRestanteRota(r.getRota().subList(r.getVisitaAtual(), r.getRota().size())) < r.getTempoDisponivel()) && (estAtual!=EstadosVeiculos.STATE_COMUNICACAO) && (estAtual!=EstadosVeiculos.STATE_FINALIZADO) && (estAtual!=EstadosVeiculos.STATE_DESLOCAMENTO_VOLTA)) {
+			if ((participoDeLeilao)
+					&& (r.getTempoGasto()
+							+ r.estimaTempoRestanteRota(r.getRota().subList(r.getVisitaAtual(), r.getRota().size())) < r
+									.getTempoDisponivel())
+					&& (estAtual != EstadosVeiculos.STATE_COMUNICACAO) && (estAtual != EstadosVeiculos.STATE_FINALIZADO)
+					&& (estAtual != EstadosVeiculos.STATE_DESLOCAMENTO_VOLTA)) {
 				// Preparar uma proposta atraves do genético
 				double gastoComTarefa = r.estimarInserirNaRota(point[0], point[1]);
 				reply.setContent(Double.toString(gastoComTarefa));
 				reply.setPerformative(ACLMessage.PROPOSE);
-				System.out.println("--> AUCTION: SEND PROPOSE ("+myAgent.getLocalName()+") "+Double.toString(gastoComTarefa));			
-				
+				System.out.println("--> AUCTION: SEND PROPOSE (" + myAgent.getLocalName() + ") "
+						+ Double.toString(gastoComTarefa));
+
 				contPropostasAbertas++;
-				//System.out.println("Proposta aberta " +a.getName()+ ": "+Integer.toString(contLeiloesAbertos));
-				if (estAtual != EstadosVeiculos.STATE_NEGOCIANDO){
+				// System.out.println("Proposta aberta " +a.getName()+ ":
+				// "+Integer.toString(contLeiloesAbertos));
+				if (estAtual != EstadosVeiculos.STATE_NEGOCIANDO) {
 					estAnterior = estAtual;
-					//estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_ENTRE;
+					// estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_ENTRE;
 				}
-				
-			}
-			else {
-				// Não preparar proposta e recusar cfp 
+
+			} else {
+				// Não preparar proposta e recusar cfp
 				reply.setPerformative(ACLMessage.REFUSE);
 				System.out.println("--> AUCTION: SEND REFUSE");
 			}
 			return reply;
 		}
-		
+
 		@Override
-		protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
-			//System.out.println("--> AUCTION: SUPIMPS, VEHICLE ("+Integer.toString(faixaV)+Integer.toString(faixaH)+") WIN: "+propose.getContent());
+		protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept)
+				throws FailureException {
+			// System.out.println("--> AUCTION: SUPIMPS, VEHICLE
+			// ("+Integer.toString(faixaV)+Integer.toString(faixaH)+") WIN:
+			// "+propose.getContent());
 			double[] point = Utilidades.fromString(accept.getContent());
-			//System.out.println("Route before insertion (" + getAID().getName() + "): "+r.getRota().subList(r.getVisitaAtual(), r.getRota().size()).toString());
+			// System.out.println("Route before insertion (" + getAID().getName() + "):
+			// "+r.getRota().subList(r.getVisitaAtual(), r.getRota().size()).toString());
 			try {
 				r.inserirNaRota(point[0], point[1]);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			contPropostasAbertas--;
-			if (contPropostasAbertas==0){
+			if (contPropostasAbertas == 0) {
 				estAtual = estAnterior;
-				//estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_ENTRE;
+				// estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_ENTRE;
 				addBehaviour(new PedirAutorizacao());
 			}
 
-			//addBehaviour(new PedirAutorizacao());
+			// addBehaviour(new PedirAutorizacao());
 
-			//System.out.println("Route after insertion (" + getAID().getName() + "): "+r.getRota().subList(r.getVisitaAtual(), r.getRota().size()).toString());
+			// System.out.println("Route after insertion (" + getAID().getName() + "):
+			// "+r.getRota().subList(r.getVisitaAtual(), r.getRota().size()).toString());
 			ACLMessage reply = accept.createReply();
 			reply.setPerformative(ACLMessage.INFORM);
 			reply.setContent("Done");
 			return reply;
 		}
-		
-		protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject){
-			//System.out.println("--> AUCTION: PROPOSAL REJECTED");
+
+		protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
+			// System.out.println("--> AUCTION: PROPOSAL REJECTED");
 			contPropostasAbertas--;
-			if (contPropostasAbertas==0){
+			if (contPropostasAbertas == 0) {
 				estAtual = estAnterior;
-				//estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_ENTRE;
+				// estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_ENTRE;
 				addBehaviour(new PedirAutorizacao());
 			}
 
-		}	
+		}
 	}
 
 	protected class PedirAutorizacao extends OneShotBehaviour {
@@ -264,97 +280,122 @@ public class Veiculo extends Agent {
 			msgPedido.setLanguage("SYNC");
 			msgPedido.addReceiver(new AID("SyncAgent", AID.ISLOCALNAME));
 			if (estAtual != EstadosVeiculos.STATE_FINALIZADO) {
-				//TODO Arrumar
-				//msgPedido.setContent(Double.toString(r.getTempoGasto()));
+				// TODO Arrumar
+				msgPedido.setContent(Double.toString(r.getTempoGasto()));
 			} else {
 				msgPedido.setContent("999999");
 			}
 			send(msgPedido);
 		}
 	}
-	
-	protected class Deslocamento extends OneShotBehaviour{
-		public void action(){
+
+	protected class Deslocamento extends OneShotBehaviour {
+		public void action() {
 			try {
 				r.deslocamento();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 			estAtual = EstadosVeiculos.STATE_ATENDIMENTO;
 			addBehaviour(new PedirAutorizacao());
-			
-			//myAgent.doWait((long) r.getTemposDeViagem()[r.getVisitaAtual()]*timeFactor+1);		
-			//System.out.println("AGENT " + getAID().getName() + ") - waiting for: "+Long.toString((long) r.getTemposDeViagem()[r.getVisitaAtual()]*timeFactor+1));
+
+			// myAgent.doWait((long)
+			// r.getTemposDeViagem()[r.getVisitaAtual()]*timeFactor+1);
+			// System.out.println("AGENT " + getAID().getName() + ") - waiting for:
+			// "+Long.toString((long)
+			// r.getTemposDeViagem()[r.getVisitaAtual()]*timeFactor+1));
 		}
 	}
-	
-protected class IniciarOperacao extends CyclicBehaviour { 
-		
+
+	protected class IniciarOperacao extends CyclicBehaviour {
+
 		// Comportamento que recebe os pontos e que prepara o início da operação
-		MessageTemplate templateIniciarOperacao = MessageTemplate.and(
-				MessageTemplate.MatchLanguage("ROTAS"),
-				MessageTemplate.MatchPerformative(ACLMessage.INFORM) );
-		
-		public void action() { 
-			ACLMessage msg = myAgent.receive(templateIniciarOperacao); 
-			//System.out.println("AGENT " + getAID().getName() + " - Recebi mensagem");
-			if ((msg != null)&&(msg.getPerformative()==ACLMessage.INFORM)) { 
+		MessageTemplate templateIniciarOperacao = MessageTemplate.and(MessageTemplate.MatchLanguage("ROTAS"),
+				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+
+		public void action() {
+			ACLMessage msg = myAgent.receive(templateIniciarOperacao);
+			// System.out.println("AGENT " + getAID().getName() + " - Recebi mensagem");
+			if ((msg != null) && (msg.getPerformative() == ACLMessage.INFORM)) {
 				// Message received. Process it
-				//codCiclo++;
-				String var = msg.getOntology(); 
-				String cont = msg.getContent(); 
-				if (var == "pontosx") { 
+				// codCiclo++;
+				String var = msg.getOntology();
+				String cont = msg.getContent();
+				if (var == "pontosx") {
 					pontoCartesianoSelecionadosX = Utilidades.fromString(cont);
 					ptInicialX = pontoCartesianoSelecionadosX;
-					//System.out.println("msg-pontosX"+cont);
+					// System.out.println("msg-pontosX"+cont);
 				} else if (var == "pontosy") {
-					pontoCartesianoSelecionadosY = Utilidades.fromString(cont); 
+					pontoCartesianoSelecionadosY = Utilidades.fromString(cont);
 					ptInicialY = pontoCartesianoSelecionadosY;
-					//System.out.println("msg-pontosY"+cont);
+					// System.out.println("msg-pontosY"+cont);
 				}
-				
+
 				// Criar a rota e iniciar a operação
-				if (pontoCartesianoSelecionadosX!=null && pontoCartesianoSelecionadosY!=null){
-					//System.out.println("AGENT " + getAID().getName() + ") : recebi a mensagem de "+var);
-					//System.out.println("AGENT " + getAID().getName() + ") : recebi pontos"+);
+				if (pontoCartesianoSelecionadosX != null && pontoCartesianoSelecionadosY != null) {
+					// System.out.println("AGENT " + getAID().getName() + ") : recebi a mensagem de
+					// "+var);
+					// System.out.println("AGENT " + getAID().getName() + ") : recebi pontos"+);
 					try {
-						//System.out.println("AGENT " + getAID().getName() + " pontosX" + Arrays.toString(pontoCartesianoSelecionadosX));
-						//System.out.println("AGENT " + getAID().getName() + " pontosY" + Arrays.toString(pontoCartesianoSelecionadosY));
-						
-						// Update informação se veiculos regulares vão participar inicialmente dos leilões
-						if (faixaV!=99999) participoDeLeilao = true;
-						// Update informação se veiculos auxiliares vão participar inicialmente dos leilões
-						else participoDeLeilao = true;
-						
+						// System.out.println("AGENT " + getAID().getName() + " pontosX" +
+						// Arrays.toString(pontoCartesianoSelecionadosX));
+						// System.out.println("AGENT " + getAID().getName() + " pontosY" +
+						// Arrays.toString(pontoCartesianoSelecionadosY));
+
+						// Update informação se veiculos regulares vão participar inicialmente dos
+						// leilões
+						if (faixaV != 99999)
+							participoDeLeilao = true;
+						// Update informação se veiculos auxiliares vão participar inicialmente dos
+						// leilões
+						else
+							participoDeLeilao = true;
+
 						contLeiloesAbertos = 0;
 						codCiclo++;
-						System.out.println("AGENT " + getAID().getName() + ") - ciclo: "+Integer.toString(codCiclo));
-						r = (RouteRandom) RouteFactory.getRoute(null, tipoSimulacao, faixaV, faixaH, pontoCartesianoSelecionadosX, pontoCartesianoSelecionadosY); 
+						System.out.println("AGENT " + getAID().getName() + ") - ciclo: " + Integer.toString(codCiclo));
+
+						r = (RouteRandom) RouteFactory.getRoute(null, tipoSimulacao, faixaV, faixaH,
+								pontoCartesianoSelecionadosX, pontoCartesianoSelecionadosY);
+						// Neste ponto, eu poderia já inicializar um leilão para que os veículos
+						// auxiliares podessem receber as suas demandas?
 						r.iniciaOperacao(codCiclo);
 						estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_IDA;
 						addBehaviour(new IdaAoDistrito());
 					} catch (SQLException e) {
 						// TODO Auto-generated catch block
-						//System.out.println("AGENT " + getAID().getName() + ") - params ("+Integer.toString(faixaV)+Integer.toString(faixaH)+"): problem DB");
+						// System.out.println("AGENT " + getAID().getName() + ") - params
+						// ("+Integer.toString(faixaV)+Integer.toString(faixaH)+"): problem DB");
 						e.printStackTrace();
 					}
-					//block();
+					// block();
+					catch (NoSuchFieldException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (SecurityException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			} else {
-				block(); 
+				block();
 			}
-		} 
-	} 
-	
-	
-	/** Comportamento do Veiculo Regular deslocar-se ao distrito
+		}
+	}
+
+	/**
+	 * Comportamento do Veiculo Regular deslocar-se ao distrito
+	 * 
 	 * @author dmontier
 	 *
 	 */
-	protected class IdaAoDistrito extends OneShotBehaviour{
-		public void action(){
+	protected class IdaAoDistrito extends OneShotBehaviour {
+		public void action() {
 			try {
 				r.chegadaAoDistrito();
 			} catch (SQLException e) {
@@ -363,19 +404,23 @@ protected class IniciarOperacao extends CyclicBehaviour {
 			}
 			estAtual = EstadosVeiculos.STATE_ATENDIMENTO;
 			addBehaviour(new PedirAutorizacao());
-			//myAgent.doWait();
-			//myAgent.doWait((long) r.getTemposDeViagem()[r.getVisitaAtual()]*timeFactor+1);		
-			//System.out.println("AGENT " + getAID().getName() + ") - waiting for: "+Long.toString((long) r.getTemposDeViagem()[r.getVisitaAtual()]*timeFactor+timeFactor));
-		}		
+			// myAgent.doWait();
+			// myAgent.doWait((long)
+			// r.getTemposDeViagem()[r.getVisitaAtual()]*timeFactor+1);
+			// System.out.println("AGENT " + getAID().getName() + ") - waiting for:
+			// "+Long.toString((long)
+			// r.getTemposDeViagem()[r.getVisitaAtual()]*timeFactor+timeFactor));
+		}
 	}
-	
-	
-	/** Comportamento do Veiculo Regular retornar ao depósito
+
+	/**
+	 * Comportamento do Veiculo Regular retornar ao depósito
+	 * 
 	 * @author dmontier
 	 *
 	 */
-	protected class RetornoAoDeposito extends OneShotBehaviour{
-		public void action(){
+	protected class RetornoAoDeposito extends OneShotBehaviour {
+		public void action() {
 			try {
 				r.retornoAoDeposito();
 				r.gravaEstatisticasDaRota();
@@ -383,11 +428,16 @@ protected class IniciarOperacao extends CyclicBehaviour {
 				pontoCartesianoSelecionadosY = null;
 			} catch (SQLException e) {
 				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			
+
 			estAtual = EstadosVeiculos.STATE_COMUNICACAO;
 			addBehaviour(new PedirAutorizacao());
-			//System.out.println("AGENT " + getAID().getName() + ") - waiting for: "+Long.toString((long) r.getTemposDeViagem()[r.getVisitaAtual()]*timeFactor+1));
+			// System.out.println("AGENT " + getAID().getName() + ") - waiting for:
+			// "+Long.toString((long)
+			// r.getTemposDeViagem()[r.getVisitaAtual()]*timeFactor+1));
 		}
 	}
 

@@ -1,5 +1,6 @@
 package utils;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,6 +9,7 @@ import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -16,12 +18,18 @@ import javax.sql.DataSource;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+
 public class NetworkRandom implements Network {
 
-	Logger logger = LoggerFactory.getLogger(getClass().getName());
+	// Logger logger = LoggerFactory.getLogger(getClass().getName());
 
 	// DECLARAÇÃO DE VARIÁVEIS
 
@@ -68,10 +76,11 @@ public class NetworkRandom implements Network {
 	double[] th;
 	double[] tu;
 	double k2;
-	DataSource dataSource = null;
+	// DataSource dataSource = Utilidades.setupDataSource();
 	Connection con;
 
 	UniformRealDistribution distRndZeroUm = new UniformRealDistribution(0, 1);
+	// Double distRndZeroUm = 0.5;
 
 	/**
 	 * Construtuor de uma Rede Randomica * @param tpRt : tipo de rota
@@ -97,9 +106,10 @@ public class NetworkRandom implements Network {
 	 * @param jor
 	 * @param nrAux número de veículos auxiliares a serem criados
 	 * @throws SQLException
+	 * @throws ClassNotFoundException
 	 */
 	public NetworkRandom(String tpRt, int nrX, int nrY, int r, double den, int qtdCl, int[] ang, double prob, int vel,
-			int jor, int nrAux) throws SQLException {
+			int jor, int nrAux) throws SQLException, ClassNotFoundException {
 		if (RouteFactory.isValid(tpRt)) {
 			tipoRota = tpRt;
 			numAreaX = nrX;
@@ -120,12 +130,12 @@ public class NetworkRandom implements Network {
 			jornada = jor;
 			nrveiculos_aux = nrAux;
 
-			distRndZeroUm.reseedRandomGenerator(System.currentTimeMillis());
+			// distRndZeroUm.reseedRandomGenerator(System.currentTimeMillis());
 
 			nrClientesZona[0] = quantidadeClientes;
 			raio[0] = raioInicial;
 			area[0] = calculaArea(nrClientesZona[0], densidade);
-			k2 = new NormalDistribution(1.32, 0.12).sample();
+			// k2 = new NormalDistribution(1.32, 0.12).sample();
 			th[0] = calculaTh(raio[0], k2, velocidadeMedia);
 			tu[0] = jornada * 60 - th[0];
 
@@ -134,31 +144,61 @@ public class NetworkRandom implements Network {
 				th[i] = calculaTh(raio[i], k2, velocidadeMedia);
 				tu[i] = jornada * 60 - th[i];
 				nrClientesZona[i] = (int) (calculaNumeroClienteZona(nrClientesZona, i));
+				//nrClientesZona[i] = 46;
+
 				area[i] = calculaArea(nrClientesZona[i], densidade);
 			}
 			raio[numAreaX] = calculaRaio(numAreaX, 2);
 
 			// TESTE COM NÚMERO FIXO DE CLIENTES POR ZONA DO PAULO
 			// Sem carga
-			nrClientesZona[0] = 36;
-			nrClientesZona[1] = 29;
-			nrClientesZona[2] = 25;
-			// Com carga
-			nrClientesZona[0] = 47;
-			nrClientesZona[1] = 34;
-			nrClientesZona[2] = 29;
+			/*
+			 * nrClientesZona[0] = 36; nrClientesZona[1] = 29; nrClientesZona[2] = 25; //
+			 * Com carga nrClientesZona[0] = 47; nrClientesZona[1] = 34; nrClientesZona[2] =
+			 * 29;
+			 */
 			pontoTransAuxX = 0;
 			pontoTransAuxY = 0;
 
-			con = dataSource.getConnection();
+			System.out.println("** * * ** ***** *NETWORKRANDOM ANTES DE CHAMAR O BANCO DE DADOS*** * * ** * * * *");
+
+			/*
+			 * MongoClient mongoClient = new MongoClient("localhost", 27017); MongoDatabase
+			 * database = mongoClient.getDatabase("TCC"); MongoCollection<Document>
+			 * collection = database.getCollection("simulacao"); MongoCursor cursor =
+			 * collection.find().iterator();
+			 * 
+			 * codSimulacao = 0; Field codsimulacao2 = null;
+			 * 
+			 * try { while (((MongoCursor) collection).hasNext()) { codsimulacao2 =
+			 * collection.getDocumentClass().getField("codSimulacao");
+			 * 
+			 * } } finally { cursor.close(); }
+			 * 
+			 * collection = database.getCollection("visitas"); collection.insertOne(new
+			 * Document("codSimulacao", codsimulacao2).append("codCliclo", codCiclo)
+			 * .append("faixaV", faixaV).append("faixaH", faixaH));
+			 */
+
+			con = Utilidades.getConnection();
+			System.out.println(con.toString());
+			if (con == null) {
+				System.out.println("con ta NULL");
+			} else {
+				System.out.println("con ta Ok");
+			}
 
 			// Identifica o maior código de simulação
 			codSimulacao = 0;
 			String query = "select max(id) from simulacao";
 			Statement stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
-			while (rs.next()) {
-				codSimulacao = rs.getInt(1);
+			if (rs == null) {
+				codSimulacao = 1;
+			} else {
+				while (rs.next()) {
+					codSimulacao = rs.getInt(1);
+				}
 			}
 			rs.close();
 
@@ -167,7 +207,7 @@ public class NetworkRandom implements Network {
 		}
 	}
 
-	public NetworkRandom(String tpRt) throws SQLException {
+	public NetworkRandom(String tpRt) throws SQLException, ClassNotFoundException {
 		this(tpRt, 3, 3, 6, 0.75, 37, new int[] { 15, 30, 45, 60 }, 0.7, 30, 8, 0);
 	}
 
@@ -202,21 +242,21 @@ public class NetworkRandom implements Network {
 		Route r;
 		for (int i = 0; i < numAreaX; i++) {
 			for (int j = 0; j < numAreaY; j++) {
-
-				// System.out.println("número de clientes da faixa "+Integer.toString(i)+":
-				// "+Integer.toString(nrClientesZona[i]));
+				// System.out.println("número de clientes da faixa " + Integer.toString(i) + ":"
+				// + Integer.toString(nrClientesZona[i]));
 
 				gerarPontos(i, j);
-				// System.out.println("clientes gerados:"+Arrays.toString(pontoCartesianoX));
+				// System.out.println("clientes gerados:" + Arrays.toString(pontoCartesianoX));
 
 				int[] pt01 = gerarPontosSelecionados(i);
-				// System.out.println("número de clientes selecionados:
-				// "+Integer.toString(totalPontoCartesianoSelecionados));
-				// System.out.println("clientes selecionados: "+Arrays.toString(pt01));
+				// System.out.println(
+				// "número de clientes selecionados:" +
+				// Integer.toString(totalPontoCartesianoSelecionados));
+				// System.out.println("clientes selecionados: " + Arrays.toString(pt01));
 
 				double[][] ptSel = montarPontosCartesianosSelecionados(i, pt01);
 
-				// System.out.println("zona: "+Integer.toString(i)+Integer.toString(j));
+				// System.out.println("zona: " + Integer.toString(i) + Integer.toString(j));
 				// System.out.println("visitas selecionadas: " +
 				// Integer.toString(totalPontoCartesianoSelecionados));
 				// System.out.println("Tamanho da rota criada: " +
@@ -229,10 +269,10 @@ public class NetworkRandom implements Network {
 		}
 	}
 
-	public void gravaEstatisticasDaSimulacao(int ciclos) throws SQLException {
+	public void gravaEstatisticasDaSimulacao(int ciclos) throws SQLException, ClassNotFoundException {
 
 		if (con.isClosed()) {
-			con = dataSource.getConnection();
+			con = Utilidades.getConnection();
 		}
 
 		// Descobrindo número médio de veículos regulares em cada ciclo
@@ -717,6 +757,22 @@ public class NetworkRandom implements Network {
 	 */
 	public double getPontoTransAuxY() {
 		return pontoTransAuxY;
+	}
+
+	public double[] getPontoCartesianoX() {
+		return pontoCartesianoX;
+	}
+
+	public void setPontoCartesianoX(double[] pontoCartesianoX) {
+		this.pontoCartesianoX = pontoCartesianoX;
+	}
+
+	public double[] getPontoCartesianoY() {
+		return pontoCartesianoY;
+	}
+
+	public void setPontoCartesianoY(double[] pontoCartesianoY) {
+		this.pontoCartesianoY = pontoCartesianoY;
 	}
 
 }

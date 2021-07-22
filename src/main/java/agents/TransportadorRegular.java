@@ -26,13 +26,15 @@ public class TransportadorRegular extends Transportador{
 	protected boolean existemRotasRegularesPendentes;
 
 	protected void setup() {
+		
+		System.out.println("** * * ** ***** *INICIANDO SETUP *** * * ** * * * *");
 
 		Object[] args = getArguments(); // leitura de parametros
 		tipoSimulacao = args[0].toString();
-		qtdRodadas = (int) args[1];
-		nrVeiculosX = (int) args[2];
-		nrVeiculosY = (int) args[3];
-		nrVeiculosAux = (int) args[4];
+		qtdRodadas = Integer.valueOf(args[1].toString());
+		nrVeiculosX = Integer.valueOf(args[2].toString());
+		nrVeiculosY = Integer.valueOf(args[3].toString());
+		nrVeiculosAux = Integer.valueOf(args[4].toString());
 		matrizRotasRegularesConcluidas = new int[nrVeiculosX + 1][nrVeiculosY + 1];
 		existemRotasAuxiliaresPendentes = true;
 		if (nrVeiculosAux == 0)
@@ -51,12 +53,17 @@ public class TransportadorRegular extends Transportador{
 		} catch (FIPAException fe) {
 			fe.printStackTrace();
 		}
+		
+		System.out.println("tipo de simulaçao" + tipoSimulacao);
 
 		// Criar rede randomica
 		try {
 			net = new NetworkRandom(tipoSimulacao);
 			// net.criarRotas();
 		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -102,11 +109,29 @@ public class TransportadorRegular extends Transportador{
 			myAgent.doWait(1000);
 
 			codCiclo++;
+			//System.out.println(codCiclo);
+			//System.out.println(Integer.toString(codCiclo));
+			/*
+			
+			System.out.println(Integer.toString(net.getCodSimulacao()));
+			*/
+
+
 			System.out.println("AGENT (" + getAID().getName() + ") - Start cicle: " + Integer.toString(codCiclo)
-					+ " - Simulation: " + Integer.toString(net.getCodSimulacao()));
+					+ " - Simulation: "); //+ Integer.toString(net.getCodSimulacao()));
 
 			try {
+				if(net == null) {
+					System.out.println("net TA NULL");
+				}
+				
 				net.criarRotas();
+				
+				/*for (int i = 0; i < 10; i++) {
+					System.out.println("TESTANDO O NET");
+					System.out.println(Arrays.toString(net.getRotas()[0][0].getPontoCartesianoSelecionadosX()));
+					System.out.println(Arrays.toString(net.getRotas()[0][0].getPontoCartesianoSelecionadosY()));
+				}*/
 
 				// Comunicar ao transportador auxiliar o incício do ciclo
 				ACLMessage msgAux = new ACLMessage(ACLMessage.INFORM);
@@ -129,7 +154,7 @@ public class TransportadorRegular extends Transportador{
 				msg00y.setOntology("pontosy");
 				msg00y.setContent(Arrays.toString(net.getRotas()[0][0].getPontoCartesianoSelecionadosY()));
 				send(msg00y);
-
+				
 				ACLMessage msg01x = new ACLMessage(ACLMessage.INFORM);
 				msg01x.setLanguage("ROTAS");
 				msg01x.addReceiver(new AID("VeiculoRegular(01)", AID.ISLOCALNAME));
@@ -213,7 +238,7 @@ public class TransportadorRegular extends Transportador{
 				msg20y.setOntology("pontosy");
 				msg20y.setContent(Arrays.toString(net.getRotas()[2][0].getPontoCartesianoSelecionadosY()));
 				send(msg20y);
-
+				
 				ACLMessage msg21x = new ACLMessage(ACLMessage.INFORM);
 				msg21x.setLanguage("ROTAS");
 				msg21x.addReceiver(new AID("VeiculoRegular(21)", AID.ISLOCALNAME));
@@ -259,7 +284,7 @@ public class TransportadorRegular extends Transportador{
 
 		public void action() {
 			ACLMessage msg = myAgent.receive(template);
-
+			
 			if ((msg != null) && (msg.getPerformative() == ACLMessage.INFORM)) {
 				// Message received. Process it
 				System.out.println("Mensagem final de: " + msg.getSender().getName());
@@ -392,10 +417,13 @@ public class TransportadorRegular extends Transportador{
 					} catch (SQLException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 					System.out.println("AGENT " + getAID().getName() + ") - FINISH SIMULATION");
-					Utilidades.SendMailTLS("Simulação " + tipoSimulacao + " (" + Integer.toString(net.getCodSimulacao())
-							+ ") terminada.");
+					/*Utilidades.SendMailTLS("Simulação " + tipoSimulacao + " (" + Integer.toString(net.getCodSimulacao())
+							+ ") terminada.");*/
 				}
 			} else {
 				block();

@@ -46,9 +46,9 @@ public class RouteRandomAuxiliar extends RouteRandom implements EstrategiaCooper
 	}
 
 	private void ordenaPontosRecebidosNoTempo() {
-		pontosTempoOrdenado = new ArrayList<>();
-		pontosXOrdenado = new ArrayList<>();
-		pontosYOrdenado = new ArrayList<>();
+		pontosTempoOrdenado = new ArrayList<Double>();
+		pontosXOrdenado = new ArrayList<Double>();
+		pontosYOrdenado = new ArrayList<Double>();
 		pontosTempoOrdenado.addAll(pontosTempo);
 		Collections.sort(pontosTempoOrdenado);
 		for (int k = 0; k < pontosTempoOrdenado.size(); k++) {
@@ -67,7 +67,7 @@ public class RouteRandomAuxiliar extends RouteRandom implements EstrategiaCooper
 	 * @param r : ciclo de execução
 	 * 
 	 */
-	public void processamento(int r) throws SQLException {
+	public void processamento(int r) throws SQLException, ClassNotFoundException {
 
 		codCiclo = r;
 
@@ -116,9 +116,9 @@ public class RouteRandomAuxiliar extends RouteRandom implements EstrategiaCooper
 
 	}
 
-	public void iniciaOperacao(int cc) throws SQLException {
+	public void iniciaOperacao(int cc) throws SQLException, ClassNotFoundException {
 
-		con = dataSource.getConnection();
+		con = Utilidades.getConnection();
 
 		// Identifica o maior código de simulação
 		String query = "select max(id) from simulacao";
@@ -204,7 +204,7 @@ public class RouteRandomAuxiliar extends RouteRandom implements EstrategiaCooper
 
 			// Descobrindo quantas tarefas foram recebidas até o momento tempoGasto
 			int qtNewTarefas = 0;
-			List<Integer> tarefasConhecidas = new ArrayList<>();
+			List<Integer> tarefasConhecidas = new ArrayList<Integer>();
 			while (pontosTempoOrdenado.get(qtNewTarefas) <= tempoGasto) {
 				tarefasConhecidas.add(qtNewTarefas);
 				qtNewTarefas++;

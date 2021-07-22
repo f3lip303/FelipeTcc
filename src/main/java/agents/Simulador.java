@@ -6,6 +6,8 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import org.bson.Document;
+
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
@@ -19,7 +21,7 @@ import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
 import utils.Utilidades;
 
-public class Simulador extends Agent{
+public class Simulador extends Agent {
 
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 	private Long timeFactor = (long) 1000; // para cada minuto na simulacao, dar delay de 1000 milisegundos (1 segundo)
@@ -31,6 +33,8 @@ public class Simulador extends Agent{
 		Object[] args = getArguments(); // leitura de parametros
 		tipoSimulacao = args[0].toString();
 		qtdRodadas = Integer.parseInt(args[1].toString());
+		
+		tipoSimulacao = tipoSimulacao.replaceAll(",", "");
 
 		// Registro do agente simulador no DF
 		DFAgentDescription dfd = new DFAgentDescription();
@@ -47,9 +51,9 @@ public class Simulador extends Agent{
 
 		// Gravação na tabela de simulação
 		try {
-			//TODO DATA SOURCE DO MONGO
-			DataSource dataSource = Utilidades.setupDataSource();
-			Connection con = dataSource.getConnection();
+
+			//DataSource dataSource = Utilidades.setupDataSource();
+			Connection con = Utilidades.getConnection();
 			String query = "INSERT INTO simulacao (qtciclos,tipo) VALUES (?,?)";
 			PreparedStatement ps = con.prepareStatement(query);
 			ps.setInt(1, qtdRodadas);
@@ -57,9 +61,17 @@ public class Simulador extends Agent{
 			ps.addBatch();
 			ps.executeBatch();
 			con.close();
-		} catch (SQLException e) {
+
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		
+		if (tipoSimulacao.equals("dinamica_agentes_ult_aux_2")){
+			System.out.println("É igual");
+		}else {
+			System.out.println(tipoSimulacao);
+			System.out.println("dinamica_agentes_ult_aux_2");
 		}
 
 		System.out.println("Agent " + getAID().getName() + " INICIADO.");
@@ -90,6 +102,7 @@ public class Simulador extends Agent{
 			addBehaviour(sb);
 		} else if (tipoSimulacao.equals("dinamica_agentes_ult_aux_2")
 				|| tipoSimulacao.equals("dinamica_agentes_equil_aux_2")) {
+			System.out.println("chegeui até aqui");
 			SequentialBehaviour sb = new SequentialBehaviour();
 			sb.addSubBehaviour(new IniciarAgenteSync());
 			sb.addSubBehaviour(new IniciarAgentesAuxiliares(2));
@@ -130,6 +143,55 @@ public class Simulador extends Agent{
 			sb.addSubBehaviour(new IniciarAgentesAuxiliares(7));
 			sb.addSubBehaviour(new IniciarAgentesRegulares(7));
 			addBehaviour(sb);
+		} else if (tipoSimulacao.equals("dinamica_agentes_transp_ult_aux_1")
+				|| tipoSimulacao.equals("dinamica_agentes_transp_equil_aux_1")) {
+			SequentialBehaviour sb = new SequentialBehaviour();
+			sb.addSubBehaviour(new IniciarAgenteSync());
+			sb.addSubBehaviour(new IniciarAgentesTransportadorAuxiliares(1));
+			sb.addSubBehaviour(new IniciarAgentesRegulares(1));
+			addBehaviour(sb);
+		} else if (tipoSimulacao.equals("dinamica_agentes_transp_ult_aux_2")
+				|| tipoSimulacao.equals("dinamica_agentes_transp_equil_aux_2")) {
+			SequentialBehaviour sb = new SequentialBehaviour();
+			sb.addSubBehaviour(new IniciarAgenteSync());
+			sb.addSubBehaviour(new IniciarAgentesTransportadorAuxiliares(2));
+			sb.addSubBehaviour(new IniciarAgentesRegulares(2));
+			addBehaviour(sb);
+		} else if (tipoSimulacao.equals("dinamica_agentes_transp_ult_aux_3")
+				|| tipoSimulacao.equals("dinamica_agentes_transp_equil_aux3")) {
+			SequentialBehaviour sb = new SequentialBehaviour();
+			sb.addSubBehaviour(new IniciarAgenteSync());
+			sb.addSubBehaviour(new IniciarAgentesTransportadorAuxiliares(3));
+			sb.addSubBehaviour(new IniciarAgentesRegulares(3));
+			addBehaviour(sb);
+		} else if (tipoSimulacao.equals("dinamica_agentes_transp_ult_aux_4")
+				|| tipoSimulacao.equals("dinamica_agentes_transp_equil_aux_4")) {
+			SequentialBehaviour sb = new SequentialBehaviour();
+			sb.addSubBehaviour(new IniciarAgenteSync());
+			sb.addSubBehaviour(new IniciarAgentesTransportadorAuxiliares(4));
+			sb.addSubBehaviour(new IniciarAgentesRegulares(4));
+			addBehaviour(sb);
+		} else if (tipoSimulacao.equals("dinamica_agentes_transp_ult_aux_5")
+				|| tipoSimulacao.equals("dinamica_agentes_transp_equil_aux_5")) {
+			SequentialBehaviour sb = new SequentialBehaviour();
+			sb.addSubBehaviour(new IniciarAgenteSync());
+			sb.addSubBehaviour(new IniciarAgentesTransportadorAuxiliares(5));
+			sb.addSubBehaviour(new IniciarAgentesRegulares(5));
+			addBehaviour(sb);
+		} else if (tipoSimulacao.equals("dinamica_agentes_transp_ult_aux_6")
+				|| tipoSimulacao.equals("dinamica_agentes_transp_equil_aux_6")) {
+			SequentialBehaviour sb = new SequentialBehaviour();
+			sb.addSubBehaviour(new IniciarAgenteSync());
+			sb.addSubBehaviour(new IniciarAgentesTransportadorAuxiliares(6));
+			sb.addSubBehaviour(new IniciarAgentesRegulares(6));
+			addBehaviour(sb);
+		} else if (tipoSimulacao.equals("dinamica_agentes_transp_ult_aux_7")
+				|| tipoSimulacao.equals("dinamica_agentes_transp_equil_aux_7")) {
+			SequentialBehaviour sb = new SequentialBehaviour();
+			sb.addSubBehaviour(new IniciarAgenteSync());
+			sb.addSubBehaviour(new IniciarAgentesTransportadorAuxiliares(7));
+			sb.addSubBehaviour(new IniciarAgentesRegulares(7));
+			addBehaviour(sb);
 		}
 	}
 
@@ -150,7 +212,7 @@ public class Simulador extends Agent{
 			AgentContainer aContainer = getContainerController();
 			AgentController aController;
 			try {
-				aController = aContainer.createNewAgent("SyncAgent", "logdyn.agents.SyncAgent", null);
+				aController = aContainer.createNewAgent("SyncAgent", "agents.SyncAgent", null);
 				aController.start();
 			} catch (StaleProxyException e) {
 				// TODO Auto-generated catch block
@@ -200,50 +262,41 @@ public class Simulador extends Agent{
 			try {
 				argumentos00[1] = 0;
 				argumentos00[2] = 0;
-				aController = aContainer.createNewAgent("VeiculoRegular(00)", "logdyn.agents.VeiculoRegular",
-						argumentos00);
+				aController = aContainer.createNewAgent("VeiculoRegular(00)", "agents.VeiculoRegular", argumentos00);
 				aController.start();
 				argumentos01[1] = 0;
 				argumentos01[2] = 1;
-				aController = aContainer.createNewAgent("VeiculoRegular(01)", "logdyn.agents.VeiculoRegular",
-						argumentos01);
+				aController = aContainer.createNewAgent("VeiculoRegular(01)", "agents.VeiculoRegular", argumentos01);
 				aController.start();
 				argumentos02[1] = 0;
 				argumentos02[2] = 2;
-				aController = aContainer.createNewAgent("VeiculoRegular(02)", "logdyn.agents.VeiculoRegular",
-						argumentos02);
+				aController = aContainer.createNewAgent("VeiculoRegular(02)", "agents.VeiculoRegular", argumentos02);
 				aController.start();
 				argumentos10[1] = 1;
 				argumentos10[2] = 0;
-				aController = aContainer.createNewAgent("VeiculoRegular(10)", "logdyn.agents.VeiculoRegular",
-						argumentos10);
+				aController = aContainer.createNewAgent("VeiculoRegular(10)", "agents.VeiculoRegular", argumentos10);
 				aController.start();
 				argumentos11[1] = 1;
 				argumentos11[2] = 1;
-				aController = aContainer.createNewAgent("VeiculoRegular(11)", "logdyn.agents.VeiculoRegular",
-						argumentos11);
+				aController = aContainer.createNewAgent("VeiculoRegular(11)", "agents.VeiculoRegular", argumentos11);
 				aController.start();
 				argumentos12[1] = 1;
 				argumentos12[2] = 2;
-				aController = aContainer.createNewAgent("VeiculoRegular(12)", "logdyn.agents.VeiculoRegular",
-						argumentos12);
+				aController = aContainer.createNewAgent("VeiculoRegular(12)", "agents.VeiculoRegular", argumentos12);
 				aController.start();
 				argumentos20[1] = 2;
 				argumentos20[2] = 0;
-				aController = aContainer.createNewAgent("VeiculoRegular(20)", "logdyn.agents.VeiculoRegular",
-						argumentos20);
+				aController = aContainer.createNewAgent("VeiculoRegular(20)", "agents.VeiculoRegular", argumentos20);
 				aController.start();
 				argumentos21[1] = 2;
 				argumentos21[2] = 1;
-				aController = aContainer.createNewAgent("VeiculoRegular(21)", "logdyn.agents.VeiculoRegular",
-						argumentos21);
+				aController = aContainer.createNewAgent("VeiculoRegular(21)", "agents.VeiculoRegular", argumentos21);
 				aController.start();
 				argumentos22[1] = 2;
 				argumentos22[2] = 2;
-				aController = aContainer.createNewAgent("VeiculoRegular(22)", "logdyn.agents.VeiculoRegular",
-						argumentos22);
+				aController = aContainer.createNewAgent("VeiculoRegular(22)", "agents.VeiculoRegular", argumentos22);
 				aController.start();
-				aController = aContainer.createNewAgent("TransportadorRegular", "logdyn.agents.TransportadorRegular",
+				aController = aContainer.createNewAgent("TransportadorRegular", "agents.TransportadorRegular",
 						argumentos);
 				aController.start();
 			} catch (StaleProxyException e) {
@@ -270,7 +323,7 @@ public class Simulador extends Agent{
 			AgentContainer aContainer = getContainerController();
 			AgentController aController;
 			try {
-				aController = aContainer.createNewAgent("TransportadorAuxiliar", "logdyn.agents.TransportadorAuxiliar",
+				aController = aContainer.createNewAgent("TransportadorAuxiliar", "agents.TransportadorAuxiliar",
 						argumentos);
 				aController.start();
 			} catch (StaleProxyException e) {
@@ -284,7 +337,7 @@ public class Simulador extends Agent{
 					argumentos99999_0[0] = tipoSimulacao;
 					argumentos99999_0[1] = 99999;
 					argumentos99999_0[2] = 0;
-					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_0)", "logdyn.agents.VeiculoAuxiliar",
+					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_0)", "agents.VeiculoAuxiliar",
 							argumentos99999_0);
 					aController.start();
 				}
@@ -293,7 +346,7 @@ public class Simulador extends Agent{
 					argumentos99999_1[0] = tipoSimulacao;
 					argumentos99999_1[1] = 99999;
 					argumentos99999_1[2] = 1;
-					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_1)", "logdyn.agents.VeiculoAuxiliar",
+					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_1)", "agents.VeiculoAuxiliar",
 							argumentos99999_1);
 					aController.start();
 				}
@@ -302,7 +355,7 @@ public class Simulador extends Agent{
 					argumentos99999_2[0] = tipoSimulacao;
 					argumentos99999_2[1] = 99999;
 					argumentos99999_2[2] = 2;
-					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_2)", "logdyn.agents.VeiculoAuxiliar",
+					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_2)", "agents.VeiculoAuxiliar",
 							argumentos99999_2);
 					aController.start();
 				}
@@ -311,7 +364,7 @@ public class Simulador extends Agent{
 					argumentos99999_3[0] = tipoSimulacao;
 					argumentos99999_3[1] = 99999;
 					argumentos99999_3[2] = 3;
-					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_3)", "logdyn.agents.VeiculoAuxiliar",
+					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_3)", "agents.VeiculoAuxiliar",
 							argumentos99999_3);
 					aController.start();
 				}
@@ -320,7 +373,7 @@ public class Simulador extends Agent{
 					argumentos99999_4[0] = tipoSimulacao;
 					argumentos99999_4[1] = 99999;
 					argumentos99999_4[2] = 4;
-					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_4)", "logdyn.agents.VeiculoAuxiliar",
+					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_4)", "agents.VeiculoAuxiliar",
 							argumentos99999_4);
 					aController.start();
 				}
@@ -329,7 +382,7 @@ public class Simulador extends Agent{
 					argumentos99999_5[0] = tipoSimulacao;
 					argumentos99999_5[1] = 99999;
 					argumentos99999_5[2] = 5;
-					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_5)", "logdyn.agents.VeiculoAuxiliar",
+					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_5)", "agents.VeiculoAuxiliar",
 							argumentos99999_5);
 					aController.start();
 				}
@@ -338,7 +391,7 @@ public class Simulador extends Agent{
 					argumentos99999_6[0] = tipoSimulacao;
 					argumentos99999_6[1] = 99999;
 					argumentos99999_6[2] = 6;
-					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_6)", "logdyn.agents.VeiculoAuxiliar",
+					aController = aContainer.createNewAgent("VeiculoAuxiliar(99999_6)", "agents.VeiculoAuxiliar",
 							argumentos99999_6);
 					aController.start();
 				}
@@ -347,4 +400,101 @@ public class Simulador extends Agent{
 			}
 		}
 	}
+
+	public class IniciarAgentesTransportadorAuxiliares extends OneShotBehaviour {
+
+		int nrTransportadorAux;
+
+		public IniciarAgentesTransportadorAuxiliares(int v) {
+			this.nrTransportadorAux = v;
+		}
+
+		public void action() {
+
+			// agente transportador
+			Object[] argumentos = new Object[3];
+			argumentos[0] = tipoSimulacao;
+			argumentos[1] = qtdRodadas;
+			argumentos[2] = nrTransportadorAux;
+			AgentContainer aContainer = getContainerController();
+			AgentController aController;
+			try {
+				aController = aContainer.createNewAgent("TransportadorAuxiliar", "agents.TransportadorAuxiliar2",
+						argumentos);
+				aController.start();
+			} catch (StaleProxyException e) {
+				e.printStackTrace();
+			}
+
+			// agentes veiculos
+			try {
+				if (nrTransportadorAux >= 1) {
+					Object[] argumentos99999_0 = new Object[3];
+					argumentos99999_0[0] = tipoSimulacao;
+					argumentos99999_0[1] = 99999;
+					argumentos99999_0[2] = 0;
+					aController = aContainer.createNewAgent("TransportadorAuxiliar(99999_0)",
+							"agents.TransportadorAuxiliar2", argumentos99999_0);
+					aController.start();
+				}
+				if (nrTransportadorAux >= 2) {
+					Object[] argumentos99999_1 = new Object[3];
+					argumentos99999_1[0] = tipoSimulacao;
+					argumentos99999_1[1] = 99999;
+					argumentos99999_1[2] = 1;
+					aController = aContainer.createNewAgent("TransportadorAuxiliar(99999_1)",
+							"agents.TransportadorAuxiliar2", argumentos99999_1);
+					aController.start();
+				}
+				if (nrTransportadorAux >= 3) {
+					Object[] argumentos99999_2 = new Object[3];
+					argumentos99999_2[0] = tipoSimulacao;
+					argumentos99999_2[1] = 99999;
+					argumentos99999_2[2] = 2;
+					aController = aContainer.createNewAgent("TransportadorAuxiliar(99999_2)",
+							"agents.TransportadorAuxiliar2", argumentos99999_2);
+					aController.start();
+				}
+				if (nrTransportadorAux >= 4) {
+					Object[] argumentos99999_3 = new Object[3];
+					argumentos99999_3[0] = tipoSimulacao;
+					argumentos99999_3[1] = 99999;
+					argumentos99999_3[2] = 3;
+					aController = aContainer.createNewAgent("TransportadorAuxiliar(99999_3)",
+							"agents.TransportadorAuxiliar2", argumentos99999_3);
+					aController.start();
+				}
+				if (nrTransportadorAux >= 5) {
+					Object[] argumentos99999_4 = new Object[3];
+					argumentos99999_4[0] = tipoSimulacao;
+					argumentos99999_4[1] = 99999;
+					argumentos99999_4[2] = 4;
+					aController = aContainer.createNewAgent("TransportadorAuxiliar(99999_4)",
+							"agents.TransportadorAuxiliar2", argumentos99999_4);
+					aController.start();
+				}
+				if (nrTransportadorAux >= 6) {
+					Object[] argumentos99999_5 = new Object[3];
+					argumentos99999_5[0] = tipoSimulacao;
+					argumentos99999_5[1] = 99999;
+					argumentos99999_5[2] = 5;
+					aController = aContainer.createNewAgent("TransportadorAuxiliar(99999_5)",
+							"agents.TransportadorAuxiliar2", argumentos99999_5);
+					aController.start();
+				}
+				if (nrTransportadorAux >= 7) {
+					Object[] argumentos99999_6 = new Object[3];
+					argumentos99999_6[0] = tipoSimulacao;
+					argumentos99999_6[1] = 99999;
+					argumentos99999_6[2] = 6;
+					aController = aContainer.createNewAgent("TransportadorAuxiliar(99999_6)",
+							"agents.TransportadorAuxiliar2", argumentos99999_6);
+					aController.start();
+				}
+			} catch (StaleProxyException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 }

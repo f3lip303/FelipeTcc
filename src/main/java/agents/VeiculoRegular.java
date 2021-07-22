@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import agents.Veiculo.EstadosVeiculos;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
@@ -15,17 +16,19 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-
 public class VeiculoRegular extends Veiculo {
 
 	protected List<Integer> tarefasParaTransferir = null;
+	protected int rodada = 0;
+	protected double tempoEspera = 0;
 
 	protected void setup() {
+		System.out.println("** * * ** ***** *INICIANDO SETUP VEÍCULO REGULAR *** * * ** * * * *");
 
 		Object[] args = getArguments(); // leitura de parametros
 		tipoSimulacao = args[0].toString();
-		faixaV = (int) args[1];
-		faixaH = (int) args[2];
+		faixaV = Integer.valueOf(args[1].toString());
+		faixaH = Integer.valueOf(args[2].toString());
 
 		// MessageTemplate.MatchReplyByDate(new Date(System.currentTimeMillis() +
 		// 1000));
@@ -80,9 +83,19 @@ public class VeiculoRegular extends Veiculo {
 			fe.printStackTrace();
 		}
 
-		addBehaviour(new IniciarOperacao());
-		addBehaviour(new ParticiparLeilaoTarefa(this, mTemplateCfp));
-		addBehaviour(new AguardarAutorizacao());
+		if (this.tipoSimulacao.equals("distri_carga")) {
+			addBehaviour(new IniciarOperacao());
+			addBehaviour(new ParticiparLeilaoTarefa(this, mTemplateCfp));
+			addBehaviour(new RealizarLeilao());
+			addBehaviour(new AguardarAutorizacao());
+
+		} else {
+			addBehaviour(new IniciarOperacao());
+			addBehaviour(new ParticiparLeilaoTarefa(this, mTemplateCfp));
+			addBehaviour(new AguardarAutorizacao());
+			// addBehaviour(new verificarFim());
+
+		}
 	}
 
 	/**
@@ -122,12 +135,13 @@ public class VeiculoRegular extends Veiculo {
 			// Atualizar a variável rota (que represeanta a rota atual a ser realizada)
 			// System.out.println("Tarefas para tranferir:
 			// "+tarefasParaTransferir.toString());
-			if (tarefasParaTransferir.size() > 0) {
-				// estAnterior = estAtual;
-				// estAtual = EstadosVeiculos.STATE_NEGOCIANDO;
-				// addBehaviour(new PedirAutorizacao());
-				addBehaviour(new RealizarLeilao());
-			}
+			if (tarefasParaTransferir != null)
+				if (tarefasParaTransferir.size() > 0) {
+					// estAnterior = estAtual;
+					// estAtual = EstadosVeiculos.STATE_NEGOCIANDO;
+					// addBehaviour(new PedirAutorizacao());
+					addBehaviour(new RealizarLeilao());
+				}
 
 			addBehaviour(new PedirAutorizacao());
 
@@ -148,7 +162,7 @@ public class VeiculoRegular extends Veiculo {
 	 */
 	protected class ComunicaTransportador extends OneShotBehaviour {
 		public void action() {
-			System.out.println("Agent " + myAgent.getName() + "comunica transportador!!!");
+			System.out.println("Agent " + myAgent.getName() + "comunica transportador Que terminei a rota!!!");
 			// Comunicar ao transportador que a rota foi realizada
 			ACLMessage msgTermino = new ACLMessage(ACLMessage.INFORM);
 			msgTermino.setLanguage("ROTAS");
@@ -162,6 +176,7 @@ public class VeiculoRegular extends Veiculo {
 			addBehaviour(new PedirAutorizacao());
 
 		}
+
 	}
 
 	/**
@@ -275,10 +290,48 @@ public class VeiculoRegular extends Veiculo {
 				} else if (estAtual.equals(EstadosVeiculos.STATE_NEGOCIANDO)) {
 					// myAgent.doWait();
 				} else {
-					block();
+					// block();
+					if (rodada != 0 && r != null) {
+						if (r.getTempoGasto() + r.estimaTempoParaProximaVisita() + tempoEspera >= r
+								.getTempoDisponivel()) {
+							estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_VOLTA;
+							// addBehaviour(new ComunicaTransportador());
+							tempoEspera = tempoEspera + 20;
+							block();
+						} else {
+							rodada++;
+							block();
+
+						}
+
+					} else {
+						rodada++;
+						block();
+
+					}
+
 				}
 			} else {
+				System.out.println("ESTOU NO BLOCK DO SEM MENSAGEM ");
+				tempoEspera = tempoEspera + 20;
+				estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_ENTRE;
 				block();
+
+			}
+		}
+	}
+
+	protected class verificarFim extends CyclicBehaviour {
+		public void action() {
+
+			if (r != null) {
+				if ((r.getTempoGasto() + r.estimaTempoParaProximaVisita() <= r.getTempoDisponivel())) {
+
+				} else {
+					System.out.println("Fim de Simulaçao chamado");
+					estAtual = EstadosVeiculos.STATE_DESLOCAMENTO_VOLTA;
+					participoDeLeilao = false;
+				}
 			}
 		}
 	}

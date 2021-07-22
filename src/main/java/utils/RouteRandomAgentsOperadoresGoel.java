@@ -99,14 +99,19 @@ public class RouteRandomAgentsOperadoresGoel extends RouteRandomDinamico {
 	}
 
 	@Override
-	public void removerDaRota(Double ptX) throws SQLException {
+	public void removerDaRota(Double ptX) throws SQLException, ClassNotFoundException {
 
 		int tarefa = Utilidades.inArray(pontoCartesianoSelecionadosX, ptX);
 		// int tarefa2 = tarefa + 1;
 
 		if (tarefa > 0) {
-			if (con.isClosed()) {
-				con = dataSource.getConnection();
+			try {
+				if (con.isClosed()) {
+					con = Utilidades.getConnection();
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			psRetirada = con.prepareStatement(queryRetirada);
 			psRetirada.setInt(1, codSimulacao);
@@ -401,7 +406,7 @@ public class RouteRandomAgentsOperadoresGoel extends RouteRandomDinamico {
 		return custoEstimadoNovaRota - custoEstimadoRotaExistente;
 	}
 
-	public void inserirNaRota(double ptX, double ptY) throws SQLException {
+	public void inserirNaRota(double ptX, double ptY) throws SQLException, ClassNotFoundException {
 
 		int tamanhoAntesDaInsercao = pontoCartesianoSelecionadosX.length;
 		// System.out.println("Rota Atual: "+rota.toString());
@@ -540,7 +545,7 @@ public class RouteRandomAgentsOperadoresGoel extends RouteRandomDinamico {
 
 		// Verificar rota resultante
 		if (con.isClosed()) {
-			con = dataSource.getConnection();
+			con = Utilidades.getConnection();
 		}
 
 		// Inserir na tabela de visitas

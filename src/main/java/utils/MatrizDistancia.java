@@ -24,9 +24,9 @@ public class MatrizDistancia {
 
 	}
 
-	public boolean isDistanceTimeCostMatrixDesorderCustomers() {
+	/*public boolean isDistanceTimeCostMatrixDesorderCustomers() {
 		return this instanceof DistanceTimeCostMatrixDesorderCustomers;
-	}
+	}*/
 
 	private double distance(Visita a, Visita b) {
 		return Math.sqrt(Math.pow(calculateHorizontalLine(a, b), 2) + Math.pow(calculateVerticalLine(a, b), 2));
@@ -55,9 +55,9 @@ public class MatrizDistancia {
 		size++;
 	}
 
-	public void addPoints(Visita a, Visita b) {
+	/*public void addPoints(Visita a, Visita b) {
 		addCost(a, b, DistanceCalculator.distance(a, b));
-	}
+	}*/
 
 	public Double getCostAmong(Visita... customers) {
 		double totalCost = 0d;

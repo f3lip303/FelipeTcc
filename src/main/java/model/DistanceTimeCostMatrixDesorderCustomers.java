@@ -12,7 +12,7 @@ public class DistanceTimeCostMatrixDesorderCustomers extends CostMatrixDesorderC
 	 * 
 	 * @param customers
 	 */
-	public DistanceTimeCostMatrixDesorderCustomers(Visita[] customers) {
+	public DistanceTimeCostMatrixDesorderCustomers(CustomerAdaptaded[] customers) {
 		super(customers);
 		int qttCustomers = customers.length;
 		this.setTimes(new double[qttCustomers][qttCustomers]);
@@ -23,7 +23,7 @@ public class DistanceTimeCostMatrixDesorderCustomers extends CostMatrixDesorderC
 	 * @param times
 	 * @param speed
 	 */
-	public DistanceTimeCostMatrixDesorderCustomers(Visita[] customers, double speed) {
+	public DistanceTimeCostMatrixDesorderCustomers(CustomerAdaptaded[] customers, double speed) {
 		this(customers);
 		this.setSpeed(speed);
 	}
@@ -34,10 +34,10 @@ public class DistanceTimeCostMatrixDesorderCustomers extends CostMatrixDesorderC
 	 * @param costMatrix
 	 * @param speed
 	 */
-	public DistanceTimeCostMatrixDesorderCustomers(MatrizDistancia costMatrix, double speed) {
+	public DistanceTimeCostMatrixDesorderCustomers(CostMatrix costMatrix, double speed) {
 		this(costMatrix.getCustomers(), speed);
 		if (costMatrix.getEnumCostTypeCostMatrix() != null && costMatrix.getEnumCostTypeCostMatrix().isDistance()) {
-			super.setMatrizDistancia(costMatrix.getMatrizDistancia());
+			super.setCosts(costMatrix.getCosts());
 			super.setEnumCostTypeCostMatrix(EnumCostTypeCostMatrix.DISTANCE_TIME);
 			super.setSize(costMatrix.getSize());
 			this.defineTimeCosts();
@@ -51,7 +51,7 @@ public class DistanceTimeCostMatrixDesorderCustomers extends CostMatrixDesorderC
 	 * @param customers
 	 * @param iCostTypeAccess
 	 */
-	public DistanceTimeCostMatrixDesorderCustomers(Visita[] customers, ICostTypeAccess iCostTypeAccess) {
+	public DistanceTimeCostMatrixDesorderCustomers(CustomerAdaptaded[] customers, ICostTypeAccess iCostTypeAccess) {
 		this(customers);
 		this.setiCostTypeAccess(iCostTypeAccess);
 	}
@@ -61,7 +61,7 @@ public class DistanceTimeCostMatrixDesorderCustomers extends CostMatrixDesorderC
 	 * @param customers
 	 * @param enumCostTypeCostMatrix
 	 */
-	public DistanceTimeCostMatrixDesorderCustomers(Visita[] customers,
+	public DistanceTimeCostMatrixDesorderCustomers(CustomerAdaptaded[] customers,
 			EnumCostTypeCostMatrix enumCostTypeCostMatrix) {
 		this(customers);
 		this.setEnumCostTypeCostMatrix(enumCostTypeCostMatrix);
@@ -69,7 +69,7 @@ public class DistanceTimeCostMatrixDesorderCustomers extends CostMatrixDesorderC
 
 	public void defineTimeCosts() {
 		if (this.getSpeed() > 0) {
-			Visita[] customers = super.getCustomers();
+			CustomerAdaptaded[] customers = super.getCustomers();
 			for (int i = customers.length - 1; i >= 0; i--) {
 				for (int j = customers.length - 1; j >= 0; j--) {
 					if (i != j)
@@ -80,14 +80,14 @@ public class DistanceTimeCostMatrixDesorderCustomers extends CostMatrixDesorderC
 			throw new IllegalStateException("Error: The speed is not setted, please set the speed.");
 	}
 
-	public void addTimeCost(Visita a, Visita b) {
+	public void addTimeCost(CustomerAdaptaded a, CustomerAdaptaded b) {
 		if (this.getSpeed() > 0) {
 			this.defineTimeCostByCustomers(a, b);
 		} else
 			throw new IllegalStateException("Error: The speed is not setted, please set the speed.");
 	}
 
-	private void defineTimeCostByCustomers(Visita a, Visita b) {
+	private void defineTimeCostByCustomers(CustomerAdaptaded a, CustomerAdaptaded b) {
 		int ia = super.getCustomerIndex(a), ib = super.getCustomerIndex(b);
 		if (ia >= 0 && ib >= 0) {
 			double timeCostAToB = this.getDistanceCost(a, b) / speed, timeCostBToA = this.getDistanceCost(b, a) / speed;
@@ -105,12 +105,12 @@ public class DistanceTimeCostMatrixDesorderCustomers extends CostMatrixDesorderC
 	@Override
 	public String toString() {
 		String info = "";
-		int i2 = matrizDistancia.length, i1 = i2 - 1;
+		int i2 = costs.length, i1 = i2 - 1;
 		System.out.println("Customers | Distance | Time");
 		for (int i = 0; i < i1; i++) {
 			for (int j = 0; j < i2; j++) {
 				if (i != j) {
-					System.out.println(this.getCustomers()[i].getCodigoVisita() + " " + this.getCustomers()[j].getCodigoVisita() + " | "
+					System.out.println(this.getCustomers()[i].getId() + " " + this.getCustomers()[j].getId() + " | "
 							+ this.getDistanceCost(this.getCustomers()[i], this.getCustomers()[j]) + " | "
 							+ this.getTimeCost(this.getCustomers()[i], this.getCustomers()[j]));
 				}
@@ -126,50 +126,50 @@ public class DistanceTimeCostMatrixDesorderCustomers extends CostMatrixDesorderC
 		this.getTimes()[ib][ia] = timeCostBToA;
 	}
 
-	public void addTimeCost(Visita a, Visita b, Double timeCost) {
+	public void addTimeCost(CustomerAdaptaded a, CustomerAdaptaded b, Double timeCost) {
 		int ia = super.getCustomerIndex(a), ib = super.getCustomerIndex(b);
 		this.getTimes()[ia][ib] = timeCost;
 		this.getTimes()[ib][ia] = timeCost;
 		super.setSize(super.getSize() + 1);
 	}
 
-	public void addDistanceCost(Visita a, Visita b, Double distance) {
+	public void addDistanceCost(CustomerAdaptaded a, CustomerAdaptaded b, Double distance) {
 		super.addCost(a, b, distance);
 	}
 
-	public Double getTimeCost(Visita a, Visita b) {
-		if (a == b)
+	public Double getTimeCost(CustomerAdaptaded customerAdaptaded, CustomerAdaptaded customerAdaptaded2) {
+		if (customerAdaptaded == customerAdaptaded2)
 			return 0d;
-		return times[getCustomerIndex(a)][getCustomerIndex(b)];
+		return times[getCustomerIndex(customerAdaptaded)][getCustomerIndex(customerAdaptaded2)];
 	}
 
-	public Double getDistanceCost(Visita a, Visita b) {
-		return super.getMatrizDistancia(a, b);
+	public Double getDistanceCost(CustomerAdaptaded customerAdaptaded, CustomerAdaptaded customerAdaptaded2) {
+		return super.getCost(customerAdaptaded, customerAdaptaded2);
 	}
 
 	private Double getDistanceCostByIndex(int ia, int ib) {
-		return super.getMatrizDistancia()[ia][ib];
+		return super.getCost(ia, ib);
 	}
 
 	@Override
-	public double getCostAmong(Visita start, Visita[] customers, Visita end) {
+	public double getCostAmong(CustomerAdaptaded start, CustomerAdaptaded[] customers, CustomerAdaptaded end) {
 		return this.getiCostTypeAccess().getCostAmong(start, customers, end);
 	}
 
 	@Override
-	public Double getCostAmong(Visita... customers) {
+	public Double getCostAmong(CustomerAdaptaded... customers) {
 		return this.getiCostTypeAccess().getCostAmong(customers);
 	}
 
-	public double getDistanceCostAmong(Visita start, Visita[] customers, Visita end) {
+	public double getDistanceCostAmong(CustomerAdaptaded start, CustomerAdaptaded[] customers, CustomerAdaptaded end) {
 		return super.getCostAmong(start, customers, end);
 	}
 
-	public Double getDistanceCostAmong(Visita... customers) {
+	public Double getDistanceCostAmong(CustomerAdaptaded... customers) {
 		return super.getCostAmong(customers);
 	}
 
-	public double getTimeCostAmong(Visita start, Visita[] customers, Visita end) {
+	public double getTimeCostAmong(CustomerAdaptaded start, CustomerAdaptaded[] customers, CustomerAdaptaded end) {
 		int limit = customers.length - 1;
 		if (limit >= 0)
 			return this.getTimeCost(start, customers[limit]) + this.getTimeCostAmong(customers)
@@ -177,7 +177,7 @@ public class DistanceTimeCostMatrixDesorderCustomers extends CostMatrixDesorderC
 		return this.getTimeCost(start, end);
 	}
 
-	public Double getTimeCostAmong(Visita... customers) {
+	public Double getTimeCostAmong(CustomerAdaptaded... customers) {
 		double totalTimeCost = 0;
 		int size = customers.length;
 		if (size > 0)
@@ -201,12 +201,12 @@ public class DistanceTimeCostMatrixDesorderCustomers extends CostMatrixDesorderC
 	}
 
 	@Override
-	public void addCost(Visita a, Visita b, Double cost) {
+	public void addCost(CustomerAdaptaded a, CustomerAdaptaded b, Double cost) {
 		this.getiCostTypeAccess().addCost(a, b, cost);
 	}
 
 	@Override
-	public Double getMatrizDistancia(Visita a, Visita b) {
+	public Double getCost(CustomerAdaptaded a, CustomerAdaptaded b) {
 		return this.getiCostTypeAccess().getCost(a, b);
 	}
 

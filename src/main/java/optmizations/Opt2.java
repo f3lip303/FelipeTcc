@@ -2,27 +2,29 @@ package optmizations;
 
 import java.util.List;
 
+import model.CostMatrix;
+import model.CustomerAdaptaded;
 import model.DistanceTimeCostMatrixDesorderCustomers;
 import model.Visita;
 import utils.MatrizDistancia;
 
 public class Opt2 extends RouteOptimizer{
 	
-	public Opt2(MatrizDistancia distanceMatrix, Visita[] route) {
+	public Opt2(CostMatrix distanceMatrix, CustomerAdaptaded[] route) {
 		super(distanceMatrix, route);
 	}
 
 	@Override
-	public Visita[] optimize(Visita[] route) {
+	public CustomerAdaptaded[] optimize(CustomerAdaptaded[] route) {
 		int i1 = size - 3, i2 = size - 2;
-		MatrizDistancia costMatrix = this.getCostMatrix();
+		CostMatrix costMatrix = this.getCostMatrix();
 		if (costMatrix.isDistanceTimeCostMatrixDesorderCustomers()) {
 			DistanceTimeCostMatrixDesorderCustomers distanceTimeCostMatrixDesorderCustomers = (DistanceTimeCostMatrixDesorderCustomers) costMatrix;
 			for (int i = 1; i < i1; i++) {
 				for (int j = 1; j < i2; j++) {
 					if (i != j) {
 						// System.out.println("Item "+i+"."+j+" of 2-OPT");
-						Visita[] currentRoute = this.exchange2Opt(i, j, route);
+						CustomerAdaptaded[] currentRoute = this.exchange2Opt(i, j, route);
 						if (distanceTimeCostMatrixDesorderCustomers.getTimeCostAmong(
 								currentRoute) < distanceTimeCostMatrixDesorderCustomers.getTimeCostAmong(route)) {
 							route = currentRoute;
@@ -36,7 +38,7 @@ public class Opt2 extends RouteOptimizer{
 				for (int j = 1; j < i2; j++) {
 					if (i != j) {
 						// System.out.println("Item "+i+"."+j+" of 2-OPT");
-						Visita[] currentRoute = this.exchange2Opt(i, j, route);
+						CustomerAdaptaded[] currentRoute = this.exchange2Opt(i, j, route);
 						if (costMatrix.getCostAmong(currentRoute) < this.getCostMatrix().getCostAmong(route)) {
 							route = currentRoute;
 						}
@@ -48,8 +50,8 @@ public class Opt2 extends RouteOptimizer{
 		return route;
 	}
 
-	public Visita[] exchange2Opt(int a, int b, Visita[] optimizedRoute) {
-		Visita[] route = optimizedRoute.clone();
+	public CustomerAdaptaded[] exchange2Opt(int a, int b, CustomerAdaptaded[] optimizedRoute) {
+		CustomerAdaptaded[] route = optimizedRoute.clone();
 		super.exchange(a, b, route);
 		// inverter subroteiro
 		if ((b - a) > 2) {

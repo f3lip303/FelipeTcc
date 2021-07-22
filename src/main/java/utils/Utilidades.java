@@ -2,6 +2,9 @@ package utils;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,16 +13,23 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
 
-import javax.mail.*;
+/*import javax.mail.*;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMessage;*/
 import javax.sql.DataSource;
 
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.dbcp2.DriverManagerConnectionFactory;
+//import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 import model.Visita;
 
 public class Utilidades {
+
+	// static BasicDataSource ds = new BasicDataSource();
+
+	static DataSource ds;
 
 	public static Integer[] inicializaArray(Integer[] myArray, Integer value) {
 		for (int i = 0; i < myArray.length; i++) {
@@ -39,6 +49,14 @@ public class Utilidades {
 		double custo = 0;
 		for (int i = 0; i < (rt.size() - 1); i++) {
 			custo += matrix[rt.get(i)][rt.get(i + 1)];
+		}
+		return custo;
+	}
+
+	public static double calculaCustoRota(double[][] matrix, Integer[] rt) {
+		double custo = 0;
+		for (int i = 0; i < (rt.length - 1); i++) {
+			custo += matrix[rt[i]][rt[i + 1]];
 		}
 		return custo;
 	}
@@ -95,9 +113,24 @@ public class Utilidades {
 		double[][] matrizDistanciaCor = new double[tam][tam];
 		for (int i = 0; i < tam; i++) {
 			for (int j = 0; j < tam; j++) {
-				double prmAdjust = distAdjustDistance.sample();
-				matrizDistanciaCor[i][j] = (prmAdjust * m[i][j]);
-				matrizDistanciaCor[j][i] = (prmAdjust * m[j][i]);
+				// double prmAdjust = distAdjustDistance.sample();
+				matrizDistanciaCor[i][j] = (1 * m[i][j]);
+				matrizDistanciaCor[j][i] = (1 * m[j][i]);
+			}
+		}
+		return matrizDistanciaCor;
+	}
+
+	public static double[][] correcaoMatrizDistancia(double[][] m) {
+		int tam = m.length;
+		// NormalDistribution normalDistribution = new
+		// NormalDistribution(meanPrmAdjustDistance, sdPrmAdjustDistance);
+		double[][] matrizDistanciaCor = new double[tam][tam];
+		for (int i = 0; i < tam; i++) {
+			for (int j = 0; j < tam; j++) {
+				// double prmAdjust = distAdjustDistance.sample();
+				matrizDistanciaCor[i][j] = (1 * m[i][j]);
+				matrizDistanciaCor[j][i] = (1 * m[j][i]);
 			}
 		}
 		return matrizDistanciaCor;
@@ -265,50 +298,40 @@ public class Utilidades {
 		return sig;
 	}
 
-	public static void SendMailTLS(String msg) {
-
-		// Capturando o nome do PC
-		String hostname = "Unknown";
-		try {
-			InetAddress addr;
-			addr = InetAddress.getLocalHost();
-			hostname = addr.getHostName();
-		} catch (UnknownHostException ex) {
-			System.out.println("Hostname can not be resolved");
-		}
-
-		// Envio do email
-
-		final String username = "dmontier@ot.ufc.br";
-		final String password = "brasilpracristo";
-
-		Properties props = new Properties();
-		props.put("mail.smtp.auth", "true");
-		props.put("mail.smtp.starttls.enable", "true");
-		props.put("mail.smtp.host", "smtp.gmail.com");
-		props.put("mail.smtp.port", "587");
-
-		Session session = Session.getInstance(props, new javax.mail.Authenticator() {
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(username, password);
-			}
-		});
-
-		try {
-
-			Message message = new MimeMessage(session);
-			message.setFrom(new InternetAddress(username));
-			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(username));
-			message.setSubject("Resultados da Simulação em " + hostname);
-			message.setText(msg + "\n\n Concluído no computador de " + hostname);
-			Transport.send(message);
-
-			System.out.println("---> Email enviado!");
-
-		} catch (MessagingException e) {
-			throw new RuntimeException(e);
-		}
-	}
+	/*
+	 * public static void SendMailTLS(String msg) {
+	 * 
+	 * // Capturando o nome do PC String hostname = "Unknown"; try { InetAddress
+	 * addr; addr = InetAddress.getLocalHost(); hostname = addr.getHostName(); }
+	 * catch (UnknownHostException ex) {
+	 * System.out.println("Hostname can not be resolved"); }
+	 * 
+	 * // Envio do email
+	 * 
+	 * final String username = "f3lip303@.ufc.br"; final String password =
+	 * "182pcasdftk";
+	 * 
+	 * Properties props = new Properties(); props.put("mail.smtp.auth", "true");
+	 * props.put("mail.smtp.starttls.enable", "true"); props.put("mail.smtp.host",
+	 * "smtp.gmail.com"); props.put("mail.smtp.port", "587");
+	 * 
+	 * Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+	 * protected PasswordAuthentication getPasswordAuthentication() { return new
+	 * PasswordAuthentication(username, password); } });
+	 * 
+	 * try {
+	 * 
+	 * Message message = new MimeMessage(session); message.setFrom(new
+	 * InternetAddress(username)); message.setRecipients(Message.RecipientType.TO,
+	 * InternetAddress.parse(username));
+	 * message.setSubject("Resultados da Simulação em " + hostname);
+	 * message.setText(msg + "\n\n Concluído no computador de " + hostname);
+	 * Transport.send(message);
+	 * 
+	 * System.out.println("---> Email enviado!");
+	 * 
+	 * } catch (MessagingException e) { throw new RuntimeException(e); } }
+	 */
 
 	public static double[] fromString(String string) {
 		String[] strings = string.replace("[", "").replace("]", "").replace(",", "").split(" ");
@@ -319,15 +342,42 @@ public class Utilidades {
 		return result;
 	}
 
-	public static DataSource setupDataSource() {
-		/*
-		 * ds.setDriverClassName("org.postgresql.Driver"); ds.setUsername("dmontier");
-		 * ds.setPassword("demefa");
-		 * ds.setUrl("jdbc:postgresql://localhost/doctoroute"); ds.setMinIdle(15);
-		 * ds.setMaxActive(300); // ds.setRemoveAbandoned(true);
-		 * ds.setRemoveAbandonedTimeout(30000);
-		 */
-		return null;
+	/*
+	 * public static DataSource setupDataSource() {
+	 * 
+	 * ds = (DataSource) new
+	 * DriverManagerConnectionFactory("jdbc:postgresql://localhost:5432/TccFelipe",
+	 * "felipe", "felipe");
+	 * 
+	 * ds.setDriverClassName("org.postgresql.Driver"); ds.setUsername("felipe");
+	 * ds.setPassword("felipe");
+	 * ds.setUrl("jdbc:postgresql://localhost:5432/TccFelipe"); ds.setMinIdle(15);
+	 * // ds.setMaxActive(300); // ds.setRemoveAbandoned(true);
+	 * ds.setRemoveAbandonedTimeout(30000);
+	 * 
+	 * 
+	 * return ds; }
+	 */
+
+	public static Connection getConnection() throws SQLException, ClassNotFoundException {
+
+		// Class.forName("org.postgresql.Driver");
+		try {
+
+			/*
+			 * try { Class.forName("org.postgresql.Driver"); } catch (ClassNotFoundException
+			 * e) { e.printStackTrace(); }
+			 */
+			//Class.forName("org.postgresql.Driver");
+			Connection con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/TccFelipe", "felipe",
+					"felipe");
+			return con;
+
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			throw new RuntimeException(e);
+		}
+
 	}
 
 }

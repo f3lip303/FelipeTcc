@@ -1,20 +1,22 @@
 package optmizations;
 
+import model.CostMatrix;
+import model.CustomerAdaptaded;
 import model.Visita;
 import utils.MatrizDistancia;
 
 public abstract class RouteOptimizer extends Optimizer {
-	protected Visita[] optimizedRoute, routeToOptimize;
+	protected CustomerAdaptaded[] optimizedRoute, routeToOptimize;
 
-	public RouteOptimizer(MatrizDistancia costMatrix, Visita[] route) {
+	public RouteOptimizer(CostMatrix costMatrix, CustomerAdaptaded[] route) {
 		super.setCostMatrix(costMatrix);
 		super.setSize(route.length);
 		this.setRouteToOptimize(route.clone());
 	}
 
-	public Visita[] optimize() {
-		Visita[] routeToOptimize = this.getRouteToOptimize();
-		MatrizDistancia costMatrix = this.getCostMatrix();
+	public CustomerAdaptaded[] optimize() {
+		CustomerAdaptaded[] routeToOptimize = this.getRouteToOptimize();
+		CostMatrix costMatrix = this.getCostMatrix();
 		if (routeToOptimize != null)
 			if (costMatrix != null) {
 				this.setOptimizedRoute(this.optimize(routeToOptimize.clone()));
@@ -25,24 +27,24 @@ public abstract class RouteOptimizer extends Optimizer {
 
 	}
 
-	protected abstract Visita[] optimize(Visita[] route);
+	protected abstract CustomerAdaptaded[] optimize(CustomerAdaptaded[] route);
 
-	public Visita[] getRouteToOptimize() {
+	public CustomerAdaptaded[] getRouteToOptimize() {
 		return routeToOptimize;
 	}
 
-	public void setRouteToOptimize(Visita[] routeToOptimize) {
+	public void setRouteToOptimize(CustomerAdaptaded[] routeToOptimize) {
 		this.routeToOptimize = routeToOptimize;
 	}
 
-	public Visita[] getOptimizedRoute() {
+	public CustomerAdaptaded[] getOptimizedRoute() {
 		return optimizedRoute;
 	}
 
 	/**
 	 * @param optimizedRoute the optimizedRoute to set
 	 */
-	public void setOptimizedRoute(Visita[] optimizedRoute) {
+	public void setOptimizedRoute(CustomerAdaptaded[] optimizedRoute) {
 		this.optimizedRoute = optimizedRoute;
 	}
 }

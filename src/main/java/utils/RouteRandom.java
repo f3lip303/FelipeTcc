@@ -1,5 +1,6 @@
 package utils;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,20 +15,25 @@ import javax.sql.DataSource;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
 
 import optmizations.HeuristicaConstrucaoInsercaoMaisDistante;
 import optmizations.HeuristicaMelhoria;
 import optmizations.HeuristicaMelhoria3opt;
 
+public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos {
 
-
-
-
-public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
-
-	Logger logger = LoggerFactory.getLogger(getClass().getName());
+	// Logger logger = LoggerFactory.getLogger(getClass().getName());
 
 	protected int tempoDisponivel; // Tempo disponível é 480 min (ou 8h)
 
@@ -53,6 +59,10 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 	protected double probabilidadeFinal;
 	protected double sequencialAlfa;
 	protected double sequencialBeta;
+
+	// TODO Criar rota no banco de dados com os dados de
+	// pontoCartesianoSelecionadosX, pontoCartesianoSelecionadosY
+	// List<Integer> rota
 
 	// apenas os pontos do distrito que foram selecionados
 	protected double[] pontoCartesianoSelecionadosX;
@@ -96,7 +106,7 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 
 	// Gravação na tabela de simulação
 	// Inicializa o banco de dados
-	DataSource dataSource = null;
+	// DataSource dataSource = Utilidades.setupDataSource();
 	Connection con;
 
 	String queryAtendimento, queryDeslocamento;
@@ -170,9 +180,11 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 		double a, b2;
 		// Criação das distribuições de probabilidade para geração dos números
 		// randomicos
+		//distRndZeroUm = 0.5;
 		distRndZeroUm = new UniformRealDistribution(0, 1);
-		distRndZeroUm.reseedRandomGenerator(System.currentTimeMillis());
-
+		distRndZeroUm.reseedRandomGenerator(System.currentTimeMillis());	
+		
+		//TODO EU RETIREI OS COMEPTÁRIOS DAQUI ------
 		b2 = Math.log(Math.pow(sdPrmAdjustDistance, 2) / Math.pow(meanPrmAdjustDistance, 2) + 1);
 		a = Math.log(meanPrmAdjustDistance) - b2 / 2;
 		distAdjustDistance = new LogNormalDistribution(a, b2);
@@ -193,7 +205,13 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 		distVelocidadeCongestionamento = new LogNormalDistribution(a, b2);
 		distVelocidadeCongestionamento.reseedRandomGenerator(System.currentTimeMillis());
 
-		logger.trace("Criação de rota.");
+		b2 = Math.log(Math.pow(sdPrmVelNormal, 2) / Math.pow(meanPrmVelNormal, 2) + 1);
+		a = Math.log(meanPrmVelNormal) - b2 / 2;
+		distVelocidadeNormal = new LogNormalDistribution(a, b2);
+		distVelocidadeNormal.reseedRandomGenerator(System.currentTimeMillis());
+		
+		//ATÉ AQUI ------
+		System.out.println("Criação de rota.");
 		// nrVisitas = pontosX.length-1; // o primeiro ponto do roteiro é o depósito
 		pontoCartesianoSelecionadosX = pontosX;
 		pontoCartesianoSelecionadosY = pontosY;
@@ -220,11 +238,11 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 			// rotaInicial = new int[nrVisitas+2]; // +1 para retornar ao depósito
 			HeuristicaConstrucaoInsercaoMaisDistante hc = new HeuristicaConstrucaoInsercaoMaisDistante();
 			rotaInicial = hc.solve(matrizDistanciaCorrigida);
-			logger.trace("Rota construída");
+			System.out.println("Rota construída");
 
 			HeuristicaMelhoria hm = new HeuristicaMelhoria3opt();
 			rotaMelhorada = hm.solve(matrizDistanciaCorrigida, rotaInicial);
-			logger.trace("Rota melhorada");
+			System.out.println("Rota melhorada");
 
 			// System.out.println("Código da simulação : "+Integer.toString(codSimulacao));
 			// System.out.println("Tamanho da rota 0:
@@ -261,6 +279,7 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 
 	}
 
+	//TODO AQUI É ONDE EU POSSO MANIPULAR O TEMPO TOTAL DA ROTA
 	public RouteRandom(NetworkRandom net, boolean constRota, int fxV, int fxH, double[] pontosX, double[] pontosY)
 			throws SQLException {
 		this(net, constRota, fxV, fxH, pontosX, pontosY, 480, 12, 6, 30, 7.5, 20, 5, 0.6, 1.32, 0.0915, 0.0, 0.7, 0.005,
@@ -271,8 +290,12 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 	 * Rotina que dispara a realização da rota
 	 * 
 	 * @throws SQLException
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws ClassNotFoundException
 	 */
-	public void processamento(int r) throws SQLException {
+	public void processamento(int r)
+			throws SQLException, NoSuchFieldException, SecurityException, ClassNotFoundException {
 
 		iniciaOperacao(r);
 
@@ -293,12 +316,14 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 
 	}
 
-	public void iniciaOperacao(int cc) throws SQLException {
+	public void iniciaOperacao(int cc)
+			throws SQLException, NoSuchFieldException, SecurityException, ClassNotFoundException {
 
-		con = dataSource.getConnection();
+		con = Utilidades.getConnection();
 
-		// Identifica o maior código de simulação
-		codSimulacao = 0;
+		// collection.insertOne(new Document("qtdRotas",
+		// qtdRodadas).append("tipoSimulacao", tipoSimulacao));
+
 		String query = "select max(id) from simulacao";
 		Statement stmt = con.createStatement();
 		ResultSet rs = stmt.executeQuery(query);
@@ -312,34 +337,41 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 		// Preparação para criação de pontos
 		query = "INSERT INTO visitas(cods, codc, zonai, zonaj, ptx, pty, ordemnarota)"
 				+ "VALUES (?, ?, ?, ?, ?, ?, ?);";
+
 		PreparedStatement ps = con.prepareStatement(query);
 		ps.setInt(1, codSimulacao);
 		ps.setInt(2, codCiclo);
 		ps.setInt(3, faixaV);
 		ps.setInt(4, faixaH);
+		
+		System.out.println();
 
-		query = "INSERT INTO visitasplanejadas(cods, codc, zonai, zonaj, ptx, pty, ordemnarota)"
-				+ "VALUES (?, ?, ?, ?, ?, ?, ?);";
-		PreparedStatement ps2 = con.prepareStatement(query);
-		ps2.setInt(1, codSimulacao);
-		ps2.setInt(2, codCiclo);
+
+		query = "INSERT INTO visitasplanejadas(cods, codc, zonai, zonaj, ptx, pty, ordemnarota)" +
+				"VALUES (?, ?, ?, ?, ?, ?, ?);";
+		PreparedStatement ps2 = con.prepareStatement(query);            
+	    ps2.setInt(1, codSimulacao);
+	    ps2.setInt(2, codCiclo);
 		ps2.setInt(3, faixaV);
 		ps2.setInt(4, faixaH);
 
-		for (int aux = 0; aux < (pontoCartesianoSelecionadosX.length); aux++) {
-			ps.setDouble(5, pontoCartesianoSelecionadosX[rota.get(aux)]);
-			ps.setDouble(6, pontoCartesianoSelecionadosY[rota.get(aux)]);
-			ps.setDouble(7, aux);
-			ps.addBatch();
-			ps2.setDouble(5, pontoCartesianoSelecionadosX[rota.get(aux)]);
-			ps2.setDouble(6, pontoCartesianoSelecionadosY[rota.get(aux)]);
-			ps2.setDouble(7, aux);
-			ps2.addBatch();
+		for(int aux=0;aux<(pontoCartesianoSelecionadosX.length);aux++){
+		    ps.setDouble(5, pontoCartesianoSelecionadosX[rota.get(aux)]);
+		    ps.setDouble(6, pontoCartesianoSelecionadosY[rota.get(aux)]);
+		    ps.setDouble(7, aux);
+		    ps.addBatch();
+		    ps2.setDouble(5, pontoCartesianoSelecionadosX[rota.get(aux)]);
+		    ps2.setDouble(6, pontoCartesianoSelecionadosY[rota.get(aux)]);  
+		    ps2.setDouble(7, aux);
+		    ps2.addBatch();
 		}
 		ps.executeBatch();
 		ps2.executeBatch();
 
 		// Identificação do total de visitas planejadas
+
+		// TODO PESQUISAR COMO RESOLVER
+
 		query = "SELECT max(ordemnarota) from visitasplanejadas WHERE cods=" + codSimulacao + " and codc=" + codCiclo
 				+ " and zonai=" + faixaV + " and zonaj=" + faixaH;
 		stmt = con.createStatement();
@@ -357,7 +389,28 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 		tempoGasto += tempoDeslocamento;
 		distViajada += matrizDistanciaCorrigida[rota.get(0)][rota.get(1)];
 
+		/*
+		 * MongoClient mongoClient = new MongoClient("localhost", 27017); MongoDatabase
+		 * database = mongoClient.getDatabase("TCC"); MongoCollection<Document>
+		 * collection = database.getCollection("simulacao"); MongoCursor cursor =
+		 * collection.find().iterator(); DBObject updateDocument = (DBObject)
+		 * cursor.next(); DBCollection coll = (DBCollection)
+		 * database.getCollection("visitas");
+		 * 
+		 * updateDocument.put("tempoGasto", tempoGasto);
+		 * updateDocument.put("codSimulacao", codSimulacao);
+		 * updateDocument.put("codCiclo", codCiclo); updateDocument.put("faixaV",
+		 * faixaV); updateDocument.put("faixaH", faixaH);
+		 * updateDocument.put("pontoCartesianoSelecionadosX",
+		 * pontoCartesianoSelecionadosX[rota.get(visitaAtual)]);
+		 * updateDocument.put("pontoCartesianoSelecionadosY",
+		 * pontoCartesianoSelecionadosY[rota.get(visitaAtual)]);
+		 * 
+		 * coll.save(updateDocument);
+		 * 
+		 */
 		// Preparação para deslocamento
+
 		queryDeslocamento = "UPDATE visitas SET tpdeslocamento=? "
 				+ "WHERE cods=? and codc=? and zonai=? and zonaj=? and ptx=? and pty=?";
 
@@ -377,18 +430,51 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 
 	}
 
+	private Bson eq(String string, double tempoGasto2) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	/**
 	 * Rotina que modela o deslocamento do veículo para realizar a próxima tarefa
 	 * 
 	 * @throws SQLException
 	 */
 	public void deslocamento() throws SQLException {
-
+		double tempoDeslocamento = 0;
 		// Realiza o deslocamento para o próximo cliente
-		double tempoDeslocamento = calculaTempoPercurso(
-				matrizDistanciaCorrigida[rota.get(visitaAtual)][rota.get(visitaAtual + 1)]);
-		tempoGasto += tempoDeslocamento;
-		distViajada += matrizDistanciaCorrigida[rota.get(visitaAtual)][rota.get(visitaAtual + 1)];
+		if(rota.size() == visitaAtual + 1) {
+			tempoDeslocamento = calculaTempoPercurso(
+					matrizDistanciaCorrigida[rota.get(visitaAtual)][rota.get(visitaAtual)]);
+			tempoGasto += tempoDeslocamento;
+			distViajada += matrizDistanciaCorrigida[rota.get(visitaAtual)][rota.get(visitaAtual)];
+		}else {
+			tempoDeslocamento = calculaTempoPercurso(
+					matrizDistanciaCorrigida[rota.get(visitaAtual)][rota.get(visitaAtual + 1)]);
+			tempoGasto += tempoDeslocamento;
+			distViajada += matrizDistanciaCorrigida[rota.get(visitaAtual)][rota.get(visitaAtual + 1)];
+		}
+		
+
+		/*
+		 * MongoClient mongoClient = new MongoClient("localhost", 27017); MongoDatabase
+		 * database = mongoClient.getDatabase("TCC"); MongoCollection<Document>
+		 * collection = database.getCollection("simulacao"); MongoCursor cursor =
+		 * collection.find().iterator(); DBObject updateDocument = (DBObject)
+		 * cursor.next(); DBCollection coll = (DBCollection)
+		 * database.getCollection("visitas");
+		 * 
+		 * updateDocument.put("tempoGasto", tempoGasto);
+		 * updateDocument.put("codSimulacao", codSimulacao);
+		 * updateDocument.put("codCiclo", codCiclo); updateDocument.put("faixaV",
+		 * faixaV); updateDocument.put("faixaH", faixaH);
+		 * updateDocument.put("pontoCartesianoSelecionadosX",
+		 * pontoCartesianoSelecionadosX[rota.get(visitaAtual)]);
+		 * updateDocument.put("pontoCartesianoSelecionadosY",
+		 * pontoCartesianoSelecionadosY[rota.get(visitaAtual)]);
+		 * 
+		 * coll.save(updateDocument);
+		 */
 
 		PreparedStatement psDeslocamento = con.prepareStatement(queryDeslocamento);
 		psDeslocamento.setDouble(1, tempoGasto);
@@ -414,90 +500,119 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 	 */
 	public void atendimento() throws SQLException {
 
-		visitaAtual++;
+		try {
 
-		// Atualização de variáveis no início do atendimento
+			visitaAtual++;
+			System.out.println("ESTOU EM ATENDIMENTO NA VISITA: " + visitaAtual);
 
-		temposDeServico[visitaAtual] = distTempoServico.sample();
-		tempoGasto += temposDeServico[visitaAtual];
+			// Atualização de variáveis no início do atendimento
 
-		// System.out.println(Double.toString(tempoGasto));
+			temposDeServico[visitaAtual] = distTempoServico.sample();
+			tempoGasto += temposDeServico[visitaAtual];
 
-		// Realizar teste SPRT analiseSequencial(double[][], int[], int, int, int,
-		// double, double, double)
-		if (!transitoCongestionado) {
-			int resultadoTeste = testaCapacidadeRealizarRota();
-			// System.out.println("Resultado SPRT = " + Integer.toString(resultadoTeste));
-			if (resultadoTeste == 1) { // Se houve congestionamento detectado
-				transitoCongestionado = true;
-				// System.out.println("Encontrei congestionamento em (" +
-				// Integer.toString(faixaV)+Integer.toString(faixaH)+") na visita
-				// "+Integer.toString(visitaAtual));
+			/*
+			 * MongoClient mongoClient = new MongoClient("localhost", 27017); MongoDatabase
+			 * database = mongoClient.getDatabase("TCC"); MongoCollection<Document>
+			 * collection = database.getCollection("simulacao"); MongoCursor cursor =
+			 * collection.find().iterator(); DBObject updateDocument = (DBObject)
+			 * cursor.next(); DBCollection coll = (DBCollection)
+			 * database.getCollection("visitas"); collection =
+			 * database.getCollection("visitas");
+			 */
+			// System.out.println(Double.toString(tempoGasto));
 
-				// Inserir na tabela de eventos
-				String queryEventos = "INSERT INTO eventos(cods, codc, zonai, zonaj, ptx, pty, instante, evento) "
-						+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
-				PreparedStatement psEvento = con.prepareStatement(queryEventos);
-				psEvento.setInt(1, codSimulacao);
-				psEvento.setInt(2, codCiclo);
-				psEvento.setInt(3, faixaV);
-				psEvento.setInt(4, faixaH);
-				psEvento.setDouble(5, pontoCartesianoSelecionadosX[rota.get(visitaAtual)]);
-				psEvento.setDouble(6, pontoCartesianoSelecionadosY[rota.get(visitaAtual)]);
-				psEvento.setDouble(7, tempoGasto);
-				psEvento.setString(8, "JAM");
-				psEvento.addBatch();
-				psEvento.executeBatch();
+			// Realizar teste SPRT analiseSequencial(double[][], int[], int, int, int,
+			// double, double, double)
+			if (!transitoCongestionado) {
+				int resultadoTeste = testaCapacidadeRealizarRota();
+				// System.out.println("Resultado SPRT = " + Integer.toString(resultadoTeste));
+				if (resultadoTeste == 1) { // Se houve congestionamento detectado
+					transitoCongestionado = true;
+					// System.out.println("Encontrei congestionamento em (" +
+					// Integer.toString(faixaV)+Integer.toString(faixaH)+") na visita
+					// "+Integer.toString(visitaAtual));
+
+					// Inserir na tabela de eventos
+
+					/*
+					 * collection.insertOne(new Document("codSimulacao",
+					 * codSimulacao).append("codCliclo", codCiclo) .append("faixaV",
+					 * faixaV).append("faixaH", faixaH) .append("pontoCartesianoSelecionadosX",
+					 * pontoCartesianoSelecionadosX[rota.get(visitaAtual)])
+					 * .append("pontoCartesianoSelecionadosY",
+					 * pontoCartesianoSelecionadosY[rota.get(visitaAtual)]) .append("tempoGasto",
+					 * tempoGasto).append("JAM", "JAM"));
+					 */
+
+					String queryEventos = "INSERT INTO eventos(cods, codc, zonai, zonaj, ptx, pty, instante, evento) "
+							+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+					PreparedStatement psEvento = con.prepareStatement(queryEventos);
+					psEvento.setInt(1, codSimulacao);
+					psEvento.setInt(2, codCiclo);
+					psEvento.setInt(3, faixaV);
+					psEvento.setInt(4, faixaH);
+					psEvento.setDouble(5, pontoCartesianoSelecionadosX[rota.get(visitaAtual)]);
+					psEvento.setDouble(6, pontoCartesianoSelecionadosY[rota.get(visitaAtual)]);
+					psEvento.setDouble(7, tempoGasto);
+					psEvento.setString(8, "JAM");
+					psEvento.addBatch();
+					psEvento.executeBatch();
+
+				}
 			}
+
+			// Preparação para atendimento
+
+			queryAtendimento = "UPDATE visitas SET tpinicioatendimento=?, tpfimatendimento=? "
+					+ "WHERE cods=? and codc=? and zonai=? and zonaj=? and ptx=? and pty=?";
+
+			PreparedStatement psAtendimento = con.prepareStatement(queryAtendimento);
+			psAtendimento.setDouble(1, tempoGasto - temposDeServico[visitaAtual]);
+			psAtendimento.setDouble(2, tempoGasto);
+			psAtendimento.setInt(3, codSimulacao);
+			psAtendimento.setInt(4, codCiclo);
+			psAtendimento.setInt(5, faixaV);
+			psAtendimento.setInt(6, faixaH);
+			psAtendimento.setDouble(7, pontoCartesianoSelecionadosX[rota.get(visitaAtual)]);
+			psAtendimento.setDouble(8, pontoCartesianoSelecionadosY[rota.get(visitaAtual)]);
+			psAtendimento.addBatch();
+			psAtendimento.executeBatch();
+
+			// Identificar tarefas a serem transferidas (o máximo de visitas quer podem ser
+			// transferidas são as visitas restantes)
+			List<Integer> tarefasParaTransferir = new ArrayList<Integer>();
+			if (identificaTarefasParaTransferir() != null) {
+				tarefasParaTransferir.addAll(identificaTarefasParaTransferir());
+			}
+
+			// Atualizar a variável rota (que represeanta a rota atual a ser realizada)
+			// System.out.println("Tarefas para tranferir:
+			// "+tarefasParaTransferir.toString());
+			if (tarefasParaTransferir.size() > 0) {
+				// nrVisitas = nrVisitas - tarefasParaTransferir.size();
+				// System.out.println("Rota
+				// ("+Integer.toString(faixaV)+Integer.toString(faixaH)+") - Tasks to tranf:
+				// "+tarefasParaTransferir.toString()+" - Tempo em que foi detectado:
+				// "+Double.toString(tempoGasto));
+				// Transferir tarefas com problemas
+				executaTransferencia(tarefasParaTransferir);
+			}
+
+			System.out.println("Atendimento (" + Integer.toString(faixaV) + "_" + Integer.toString(faixaH)
+					+ ") - Visita atual: " + Integer.toString(visitaAtual) + "/" + Integer.toString(rota.size() - 2)
+					+ " - Tempo Gasto: " + Double.toString(tempoGasto));
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
 		}
-
-		// Preparação para atendimento
-		queryAtendimento = "UPDATE visitas SET tpinicioatendimento=?, tpfimatendimento=? "
-				+ "WHERE cods=? and codc=? and zonai=? and zonaj=? and ptx=? and pty=?";
-
-		PreparedStatement psAtendimento = con.prepareStatement(queryAtendimento);
-		psAtendimento.setDouble(1, tempoGasto - temposDeServico[visitaAtual]);
-		psAtendimento.setDouble(2, tempoGasto);
-		psAtendimento.setInt(3, codSimulacao);
-		psAtendimento.setInt(4, codCiclo);
-		psAtendimento.setInt(5, faixaV);
-		psAtendimento.setInt(6, faixaH);
-		psAtendimento.setDouble(7, pontoCartesianoSelecionadosX[rota.get(visitaAtual)]);
-		psAtendimento.setDouble(8, pontoCartesianoSelecionadosY[rota.get(visitaAtual)]);
-		psAtendimento.addBatch();
-		psAtendimento.executeBatch();
-
-		// Identificar tarefas a serem transferidas (o máximo de visitas quer podem ser
-		// transferidas são as visitas restantes)
-		List<Integer> tarefasParaTransferir = new ArrayList<Integer>();
-		if (identificaTarefasParaTransferir() != null) {
-			tarefasParaTransferir.addAll(identificaTarefasParaTransferir());
-		}
-
-		// Atualizar a variável rota (que represeanta a rota atual a ser realizada)
-		// System.out.println("Tarefas para tranferir:
-		// "+tarefasParaTransferir.toString());
-		if (tarefasParaTransferir.size() > 0) {
-			// nrVisitas = nrVisitas - tarefasParaTransferir.size();
-			// System.out.println("Rota
-			// ("+Integer.toString(faixaV)+Integer.toString(faixaH)+") - Tasks to tranf:
-			// "+tarefasParaTransferir.toString()+" - Tempo em que foi detectado:
-			// "+Double.toString(tempoGasto));
-			// Transferir tarefas com problemas
-			executaTransferencia(tarefasParaTransferir);
-		}
-
-		System.out.println("Atendimento (" + Integer.toString(faixaV) + "_" + Integer.toString(faixaH)
-				+ ") - Visita atual: " + Integer.toString(visitaAtual) + "/" + Integer.toString(rota.size() - 2)
-				+ " - Tempo Gasto: " + Double.toString(tempoGasto));
 
 	}
 
-	public void retornoAoDeposito() throws SQLException {
+	public void retornoAoDeposito() throws SQLException, ClassNotFoundException {
 		// Tempo de retorno ao depósito
 		// visitaAtual++;
 		if (con.isClosed()) {
-			con = dataSource.getConnection();
+			con = Utilidades.getConnection();
+			;
 		}
 
 		tempoGasto += calculaTempoNormal(matrizDistanciaCorrigida[rota.get(visitaAtual)][0]);
@@ -521,7 +636,7 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 	/*
 	 * @see logdyn.utils.Route#testaCapacidadeRealizarRota(int)
 	 */
-	//TODO VERIFICAR SE VOU FAZER ESTE TESTE
+	// TODO VERIFICAR SE VOU FAZER ESTE TESTE
 	public int testaCapacidadeRealizarRota() {
 		// Esta implementação utiliza o método SPRT
 		// return Utilidades.analiseSequencial(matrizDistanciaCorrigida, rota,
@@ -583,7 +698,9 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 	public void gravaEstatisticasDaRota() throws SQLException {
 
 		// Gravação das estatisitcas da rota
+
 		PreparedStatement ps = null;
+
 		String query = "INSERT INTO rotas(cods, codc, zonai, zonaj, totvisitasplanejadas, totvisitasexecutadas, tempociclofornecimento, distviajada ) "
 				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
 
@@ -789,33 +906,53 @@ public class RouteRandom extends Route implements EstrategiaCooperacaoVeiculos{
 		this.totVisitasPlanejadas = totVisitasPlanejadas;
 	}
 
-	@Override
 	public List<Integer> identificaTarefasParaTransferir() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public void executaTransferencia(List<Integer> l) throws SQLException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
-	@Override
-	public void removerDaRota(Double ptX) throws SQLException {
+	public void removerDaRota(Double ptX) throws SQLException, ClassNotFoundException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
-	@Override
-	public void inserirNaRota(double ptX, double ptY) throws SQLException {
+	public void inserirNaRota(double ptX, double ptY) throws SQLException, ClassNotFoundException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
-	@Override
 	public double estimarInserirNaRota(double ptX, double ptY) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+	public Integer[] getRotaInicial() {
+		return rotaInicial;
+	}
+
+	public Integer[] getRotaMelhorada() {
+		return rotaMelhorada;
+	}
+
+	public int getFaixaV() {
+		return faixaV;
+	}
+
+	public void setFaixaV(int faixaV) {
+		this.faixaV = faixaV;
+	}
+
+	public int getFaixaH() {
+		return faixaH;
+	}
+
+	public void setFaixaH(int faixaH) {
+		this.faixaH = faixaH;
+	}
+
 }
